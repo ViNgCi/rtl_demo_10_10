@@ -113,6 +113,21 @@ module ID_top import ibex_pkg::*; #(
   output   alu_op_e                 alu_operator_EX,
   output   op_a_sel_e               alu_op_a_mux_sel_EX,
   output   op_b_sel_e               alu_op_b_mux_sel_EX,
+
+  //to controller
+  output logic mult_en_dec,
+  output logic div_en_dec,
+  output logic lsu_we_dec,
+  output logic rf_we_dec,
+
+  output logic rf_ren_a_o,
+  output logic rf_ren_b_o,
+
+  output logic [4:0] rf_waddr_wb_o,
+
+  output logic [4:0] rf_raddr_a_o,
+  output logic [4:0] rf_raddr_b_o,
+
   
   // CONTROLLER INTERFACE
   output logic                 illegal_insn_o,

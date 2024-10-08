@@ -683,7 +683,7 @@ module riscv_core import ibex_pkg::*; #(
     .WritebackStage(WritebackStage),
     .BranchPredictor(BranchPredictor),
     .MemECC(MemECC)
-  )(
+  )fsm_control(
     .clk_i(clk_i),
     .rst_ni(rst_ni),
 
@@ -787,6 +787,8 @@ module riscv_core import ibex_pkg::*; #(
 
     //from lsu
     .lsu_resp_valid_i(lsu_resp_valid),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+
+    .priv_mode_id_i(priv_mode_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
     //decoder
     .mult_en_dec(mult_en_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)

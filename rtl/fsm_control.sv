@@ -115,6 +115,8 @@ module ibex_fsm_control# (
 
   //from lsu
   input logic lsu_resp_valid_i,
+
+  input ibex_pkg::priv_lvl_e  priv_mode_id_i,
   
 
   //from decoder
