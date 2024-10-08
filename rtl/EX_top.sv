@@ -83,10 +83,7 @@ module EX_top(
       input   op_b_sel_e               alu_op_b_mux_sel_EX,
       input   logic                    alu_instr_first_cycle_i,
       
-      // intermediate val reg
-      output logic [1:0]            imd_val_we_o,
-      output logic [33:0]           imd_val_d_o[2],
-      input  logic [33:0]           imd_val_q_i[2],
+
      
       // Outputs
       output logic [31:0]           alu_adder_result_ex_o, // to LSU
@@ -102,6 +99,12 @@ module EX_top(
       // output logic [31:0]           lsu_wdata_EX_o        // to LSU
     
     );
+
+          // intermediate val reg
+    logic [33:0]          imd_val_q_i[2];
+    logic [1:0]            imd_val_we_o;
+    logic [33:0]           imd_val_d_o[2];
+    logic [33:0]           imd_val_q[2];
 
     // assign rf_waddr_EX_o = rf_rdata_b_EX;
     
@@ -178,6 +181,22 @@ module EX_top(
   assign alu_imd_val_q = '{imd_val_q_i[0][31:0], imd_val_q_i[1][31:0]};
 
   assign result_ex_o  = multdiv_sel ? multdiv_result : alu_result;
+
+    /////////////////////////////////////////
+  // Multicycle Operation Stage Register //
+  /////////////////////////////////////////
+
+  for (genvar i = 0; i < 2; i++) begin : gen_intermediate_val_reg
+    always_ff @(posedge clk_i or negedge rst_ni) begin : intermediate_val_reg
+      if (!rst_ni) begin
+        imd_val_q[i] <= '0;
+      end else if (imd_val_we_o[i]) begin
+        imd_val_q[i] <= imd_val_d_o[i];
+      end
+    end
+  end
+
+  assign imd_val_q_i = imd_val_q;
    
    
     

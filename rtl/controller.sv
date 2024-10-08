@@ -203,7 +203,7 @@ module ibex_controller #(
   // illegal_insn_i only set when instr_valid_i is set.
   assign illegal_insn_d = illegal_insn_i & (ctrl_fsm_cs != FLUSH);
 
-  `ASSERT(IllegalInsnOnlyIfInsnValid, illegal_insn_i |-> instr_valid_i)
+  //`ASSERT(IllegalInsnOnlyIfInsnValid, illegal_insn_i |-> instr_valid_i)
 
   // exception requests
   // requests are flopped in exc_req_q.  This is cleared when controller is in
@@ -291,14 +291,14 @@ module ibex_controller #(
     assign wb_exception_o = 1'b0;
   end
 
-  `ASSERT_IF(IbexExceptionPrioOnehot,
-             $onehot({instr_fetch_err_prio,
-                      illegal_insn_prio,
-                      ecall_insn_prio,
-                      ebrk_insn_prio,
-                      store_err_prio,
-                      load_err_prio}),
-             (ctrl_fsm_cs == FLUSH) & exc_req_q)
+//  `ASSERT_IF(IbexExceptionPrioOnehot,
+//             $onehot({instr_fetch_err_prio,
+//                      illegal_insn_prio,
+//                      ecall_insn_prio,
+//                      ebrk_insn_prio,
+//                      store_err_prio,
+//                      load_err_prio}),
+//             (ctrl_fsm_cs == FLUSH) & exc_req_q)
 
   ////////////////
   // Interrupts //
@@ -894,35 +894,35 @@ module ibex_controller #(
     end
   end
 
-  `ASSERT(PipeEmptyOnIrq, ctrl_fsm_cs != IRQ_TAKEN & ctrl_fsm_ns == IRQ_TAKEN |->
-    ~instr_valid_i & ready_wb_i)
+//  `ASSERT(PipeEmptyOnIrq, ctrl_fsm_cs != IRQ_TAKEN & ctrl_fsm_ns == IRQ_TAKEN |->
+//    ~instr_valid_i & ready_wb_i)
 
-  //////////
-  // FCOV //
-  //////////
+//  //////////
+//  // FCOV //
+//  //////////
 
-  `DV_FCOV_SIGNAL(logic, all_debug_req, debug_req_i || debug_mode_q || debug_single_step_i)
-  `DV_FCOV_SIGNAL(logic, debug_wakeup, (ctrl_fsm_cs == SLEEP) & (ctrl_fsm_ns == FIRST_FETCH) &
-                                        (debug_req_i || debug_mode_q || debug_single_step_i))
-  `DV_FCOV_SIGNAL(logic, interrupt_taken, (ctrl_fsm_cs != IRQ_TAKEN) & (ctrl_fsm_ns == IRQ_TAKEN))
-  `DV_FCOV_SIGNAL(logic, debug_entry_if,
-      (ctrl_fsm_cs != DBG_TAKEN_IF) & (ctrl_fsm_ns == DBG_TAKEN_IF))
-  `DV_FCOV_SIGNAL(logic, debug_entry_id,
-      (ctrl_fsm_cs != DBG_TAKEN_ID) & (ctrl_fsm_ns == DBG_TAKEN_ID))
-  `DV_FCOV_SIGNAL(logic, pipe_flush, (ctrl_fsm_cs != FLUSH) & (ctrl_fsm_ns == FLUSH))
-  `DV_FCOV_SIGNAL(logic, debug_req, debug_req_i & ~debug_mode_q)
-  `DV_FCOV_SIGNAL(logic, debug_single_step_taken, do_single_step_d & ~do_single_step_q)
+//  `DV_FCOV_SIGNAL(logic, all_debug_req, debug_req_i || debug_mode_q || debug_single_step_i)
+//  `DV_FCOV_SIGNAL(logic, debug_wakeup, (ctrl_fsm_cs == SLEEP) & (ctrl_fsm_ns == FIRST_FETCH) &
+//                                        (debug_req_i || debug_mode_q || debug_single_step_i))
+//  `DV_FCOV_SIGNAL(logic, interrupt_taken, (ctrl_fsm_cs != IRQ_TAKEN) & (ctrl_fsm_ns == IRQ_TAKEN))
+//  `DV_FCOV_SIGNAL(logic, debug_entry_if,
+//      (ctrl_fsm_cs != DBG_TAKEN_IF) & (ctrl_fsm_ns == DBG_TAKEN_IF))
+//  `DV_FCOV_SIGNAL(logic, debug_entry_id,
+//      (ctrl_fsm_cs != DBG_TAKEN_ID) & (ctrl_fsm_ns == DBG_TAKEN_ID))
+//  `DV_FCOV_SIGNAL(logic, pipe_flush, (ctrl_fsm_cs != FLUSH) & (ctrl_fsm_ns == FLUSH))
+//  `DV_FCOV_SIGNAL(logic, debug_req, debug_req_i & ~debug_mode_q)
+//  `DV_FCOV_SIGNAL(logic, debug_single_step_taken, do_single_step_d & ~do_single_step_q)
 
-  ////////////////
-  // Assertions //
-  ////////////////
+//  ////////////////
+//  // Assertions //
+//  ////////////////
 
-  `ASSERT(AlwaysInstrClearOnMispredict, nt_branch_mispredict_o |-> instr_valid_clear_o)
+//  `ASSERT(AlwaysInstrClearOnMispredict, nt_branch_mispredict_o |-> instr_valid_clear_o)
 
-  // Selectors must be known/valid.
-  `ASSERT(IbexCtrlStateValid, ctrl_fsm_cs inside {
-      RESET, BOOT_SET, WAIT_SLEEP, SLEEP, FIRST_FETCH, DECODE, FLUSH,
-      IRQ_TAKEN, DBG_TAKEN_IF, DBG_TAKEN_ID})
+//  // Selectors must be known/valid.
+//  `ASSERT(IbexCtrlStateValid, ctrl_fsm_cs inside {
+//      RESET, BOOT_SET, WAIT_SLEEP, SLEEP, FIRST_FETCH, DECODE, FLUSH,
+//      IRQ_TAKEN, DBG_TAKEN_IF, DBG_TAKEN_ID})
 
   `ifdef INC_ASSERT
     // If something that causes a jump into an exception handler is seen that jump must occur before

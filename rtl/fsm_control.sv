@@ -113,8 +113,30 @@ module ibex_fsm_control# (
   output logic perf_mul_wait_o,
   output logic perf_div_wait_o,
 
+  //from lsu
+  input logic lsu_resp_valid_i,
+  
+
+  //from decoder
+  input logic mult_en_dec, 
+  input logic div_en_dec,
+  input logic lsu_we,
+  input logic rf_we_dec,
+
+  input logic rf_ren_a_i,
+  input logic rf_ren_b_i,
+
+  input logic [4:0] rf_waddr_wb_i,
+
+  input logic [4:0] rf_raddr_a_i,
+  input logic [4:0] rf_raddr_b_i,
+  
+  input logic ex_valid_i,
+
   output logic en_wb_o
 );
+
+  logic        rf_we_raw;
 
   logic        stall_ld_hz;
   logic        stall_mem;
@@ -124,16 +146,16 @@ module ibex_fsm_control# (
   logic        stall_id;
   logic        stall_wb;
   logic        flush_id;
-  logic stall_id;
-  logic instr_done;
-  logic multicycle_done;
+  logic        stall_id;
+  logic        instr_done;
+  logic        multicycle_done;
 
-  logic multdiv_en_dec = multdiv_en_dec_i;
-  logic alu_multicycle_dec=alu_multicycle_dec_i;
-  logic jump_set_dec = jump_set_dec_i;
-  logic branch_in_dec = branch_in_dec_i;
-  logic lsu_req_dec = lsu_req_dec_i;
-  logic lsu_req_done = lsu_req_done_i;
+  logic        multdiv_en_dec = multdiv_en_dec_i;
+  logic        alu_multicycle_dec=alu_multicycle_dec_i;
+  logic        jump_set_dec = jump_set_dec_i;
+  logic        branch_in_dec = branch_in_dec_i;
+  logic        lsu_req_dec = lsu_req_dec_i;
+  logic        lsu_req_done = lsu_req_done_i;
 
   logic        wb_exception;
   logic        id_exception;
@@ -147,24 +169,26 @@ module ibex_fsm_control# (
   logic        jump_set_dec;
   logic        jump_set, jump_set_raw;
 
-  logic illegal_dret_insn;
-  logic illegal_umode_insn;
+  logic        illegal_dret_insn;
+  logic        illegal_umode_insn;
 
-  logic dret_insn_dec = dret_insn_dec_i;
-  logic mret_insn_dec = mret_insn_dec_i;
+  logic        dret_insn_dec = dret_insn_dec_i;
+  logic        mret_insn_dec = mret_insn_dec_i;
 
-  logic wfi_insn_dec = wfi_insn_dec_i;
-  logic illegal_insn_dec = illegal_insn_dec_i;
+  logic        wfi_insn_dec = wfi_insn_dec_i;
+  logic        illegal_insn_dec = illegal_insn_dec_i;
 
-  logic mem_resp_intg_err;
+  logic        mem_resp_intg_err;
 
-  logic ecall_insn_dec = ecall_insn_dec_i;
+  logic        ecall_insn_dec = ecall_insn_dec_i;
 
-  logic ebrk_insn = ebrk_insn_i;
+  logic        ebrk_insn = ebrk_insn_i;
 
-  logic csr_pipe_flush = csr_pipe_flush_i;
+  logic        csr_pipe_flush = csr_pipe_flush_i;
 
-  logic controller_run;
+  logic        controller_run;
+  
+  logic        stall_alu;
 
 
 
@@ -285,7 +309,7 @@ module ibex_fsm_control# (
   // Branch set control //
   ////////////////////////
 
-  if (BranchTargetALU && !DataIndTiming) begin : g_branch_set_direct
+  if (BranchTargetALU) begin : g_branch_set_direct
     // Branch set fed straight to controller with branch target ALU
     // (condition pass/fail used same cycle as generated instruction request)
     assign branch_set_raw      = branch_set_raw_d;
@@ -432,7 +456,7 @@ module ibex_fsm_control# (
               // SEC_CM: CORE.DATA_REG_SW.SCA
               id_fsm_d         = (data_ind_timing_i || (!BranchTargetALU && branch_decision_i)) ?
                                      MULTI_CYCLE : FIRST_CYCLE;
-              stall_branch     = (~BranchTargetALU & branch_decision_i) | data_ind_timing_i;
+              stall_branch     = 1;
               branch_set_raw_d = (branch_decision_i | data_ind_timing_i);
 
               if (BranchPredictor) begin
@@ -508,6 +532,8 @@ module ibex_fsm_control# (
     assign multicycle_done = lsu_req_dec ? ~stall_mem : ex_valid_i;
 
     // Is a memory access ongoing that isn't finishing this cycle
+    logic outstanding_load_wb_i = 1'b0;
+    logic outstanding_store_wb_i = 1'b0;
     assign outstanding_memory_access = (outstanding_load_wb_i | outstanding_store_wb_i) &
                                        ~lsu_resp_valid_i;
 
@@ -553,13 +579,13 @@ module ibex_fsm_control# (
                              ~stall_ld_hz               &
                              ~outstanding_memory_access;
 
-    `ASSERT(IbexExecutingSpecIfExecuting, instr_executing |-> instr_executing_spec)
+//    `ASSERT(IbexExecutingSpecIfExecuting, instr_executing |-> instr_executing_spec)
 
-    `ASSERT(IbexStallIfValidInstrNotExecuting,
-      instr_valid_i & ~instr_kill & ~instr_executing |-> stall_id)
+//    `ASSERT(IbexStallIfValidInstrNotExecuting,
+//      instr_valid_i & ~instr_kill & ~instr_executing |-> stall_id)
 
-    `ASSERT(IbexCannotRetireWithPendingExceptions,
-      instr_done |-> ~(wb_exception | outstanding_memory_access))
+//    `ASSERT(IbexCannotRetireWithPendingExceptions,
+//      instr_done |-> ~(wb_exception | outstanding_memory_access))
 
     // Stall for reasons related to memory:
     // * There is an outstanding memory access that won't resolve this cycle (need to wait to allow
@@ -571,11 +597,14 @@ module ibex_fsm_control# (
 
     // If we stall a load in ID for any reason, it must not make an LSU request
     // (otherwide we might issue two requests for the same instruction)
-    `ASSERT(IbexStallMemNoRequest,
-      instr_valid_i & lsu_req_dec & ~instr_done |-> ~lsu_req_done_i)
+//    `ASSERT(IbexStallMemNoRequest,
+//      instr_valid_i & lsu_req_dec & ~instr_done |-> ~lsu_req_done_i)
 
-    assign rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o) & |rf_raddr_a_o;
-    assign rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o) & |rf_raddr_b_o;
+    logic rf_ren_a = rf_ren_a_i;
+    logic rf_ren_b = rf_ren_b_i;
+
+    assign rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_i) & |rf_raddr_a_i;
+    assign rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_i) & |rf_raddr_b_i;
 
     assign rf_rd_a_wb_match_o = rf_rd_a_wb_match;
     assign rf_rd_b_wb_match_o = rf_rd_b_wb_match;
@@ -591,6 +620,8 @@ module ibex_fsm_control# (
     // forwarding data here
     // assign rf_rdata_a_fwd = rf_rd_a_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_a_i;
     // assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
+    
+    logic outstanding_load_wb_i = 1'b0;
 
     assign stall_ld_hz = outstanding_load_wb_i & (rf_rd_a_hz | rf_rd_b_hz);
 

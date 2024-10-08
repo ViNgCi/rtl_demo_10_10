@@ -561,6 +561,11 @@ module riscv_core import ibex_pkg::*; #(
     assign instr_exec      = fetch_enable_i[0];
 
 
+    logic jump_set_dec;
+
+    logic branch_taken_id;
+
+
   //////////////////////
   //     ID Stage     //
   //////////////////////
@@ -588,8 +593,8 @@ module riscv_core import ibex_pkg::*; #(
     .pc_id_i                (pc_id),                    // CONNECTED (output t\u1eeb IF stage)
 
     // Branch
-    .instr_first_cycle_i     (),      // From FSM   // NOT DONE input logic
-    .branch_taken_i          (),      // From FSM   // NOT DONE input logic
+    .instr_first_cycle_i     (instr_first_cycle_id),      // From FSM   // NOT DONE input logic
+    .branch_taken_i          (branch_taken_id),      // From FSM   // NOT DONE input logic
 
     // LSU  Interface
     .lsu_req_EX           (lsu_req),  // to load store unit
@@ -656,14 +661,14 @@ module riscv_core import ibex_pkg::*; #(
     .alu_op_b_mux_sel_EX  (alu_op_b_mux_sel_ex),     // DONE output  op_b_sel_e
     
     // CONTROLLER INTERFACE
-    .illegal_insn_o   (illegal_insn_id),    // DONE (unused) output logic
+    .illegal_insn_o   (illegal_insn_dec),    // DONE (unused) output logic
     .ebrk_insn_o      (ebrk_insn),          // NOT DONE (n\u1ed1i vào controller) output logic
     .mret_insn_o      (mret_insn),          // NOT DONE (n\u1ed1i vào controller) output logic
                                               
     .dret_insn_o      (dret_insn),          // NOT DONE (n\u1ed1i vào controller) output logic
     .ecall_insn_o     (ecall_insn),         // NOT DONE (n\u1ed1i vào controller) output logic
     .wfi_insn_o       (wfi_insn),           // NOT DONE (n\u1ed1i vào controller) output logic
-    .jump_set_o       (),           // NOT DONE output logic
+    .jump_set_o       (jump_set_dec),           // NOT DONE output logic
     .icache_inval_o   (icache_inval)        // DONE (n\u1ed1i input c\u1ee7a if_stage )
   );
 
@@ -674,10 +679,10 @@ module riscv_core import ibex_pkg::*; #(
   //     ID Stage     //
   //////////////////////
   ibex_fsm_control#(
-    BranchTargetALU(BranchTargetALU),
-    WritebackStage(WritebackStage),
-    BranchPredictor(BranchPredictor),
-    MemECC(MemECC)
+    .BranchTargetALU(BranchTargetALU),
+    .WritebackStage(WritebackStage),
+    .BranchPredictor(BranchPredictor),
+    .MemECC(MemECC)
   )(
     .clk_i(clk_i),
     .rst_ni(rst_ni),
@@ -689,12 +694,14 @@ module riscv_core import ibex_pkg::*; #(
     .csr_mstatus_tw_i(csr_mstatus_tw),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .wfi_insn_dec_i(wfi_insn),    // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
 
-    .illegal_insn_o(),
+    .illegal_insn_o(illegal_insn_id),
     .instr_valid_i(instr_valid_id),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
-    .illegal_insn_dec_i(illegal_insn_id),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
+    .illegal_insn_dec_i(illegal_insn_dec),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .illegal_csr_insn_i(illegal_csr_insn_id),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
+    
     .lsu_load_resp_intg_err_i(lsu_load_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .lsu_store_resp_intg_err_i(lsu_store_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    
     .ecall_insn_dec_i(ecall_insn),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .ebrk_insn_i(ebrk_insn),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .csr_pipe_flush_i(csr_pipe_flush),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
@@ -720,7 +727,7 @@ module riscv_core import ibex_pkg::*; #(
     .nt_branch_addr_o(nt_branch_addr),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .exc_pc_mux_o(exc_pc_mux_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .exc_cause_o(exc_cause),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .instr_first_cycle_id_o(),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .instr_first_cycle_id_o(instr_first_cycle_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .instr_valid_clear_o(instr_valid_clear),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
     .lsu_addr_last_i(lsu_addr_last),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
@@ -746,9 +753,9 @@ module riscv_core import ibex_pkg::*; #(
     .debug_cause_o(debug_cause),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .debug_csr_save_o(debug_csr_save),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .debug_req_i(debug_req),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .debug_single_step_o(debug_single_step),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .debug_ebreakm_o(debug_ebreakm),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .debug_ebreaku_o(debug_ebreaku),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .debug_single_step_i(debug_single_step),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .debug_ebreakm_i(debug_ebreakm),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .debug_ebreaku_i(debug_ebreaku),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .trigger_match_i(trigger_match),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
     .perf_branch_o(perf_branch),  // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
@@ -778,11 +785,30 @@ module riscv_core import ibex_pkg::*; #(
     .perf_mul_wait_o(perf_mul_wait),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .perf_div_wait_o(perf_div_wait),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
-    .en_wb_o(en_wb),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    //from lsu
+    .lsu_resp_valid_i(lsu_resp_valid),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+
+    //decoder
+    .mult_en_dec(mult_en_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .div_en_dec(div_en_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .lsu_we(lsu_we),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_we_dec(rf_we_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+
+    .rf_ren_a_i(rf_ren_a),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_ren_b_i(rf_ren_b),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+
+    .rf_waddr_i(rf_waddr),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+
+    .rf_raddr_a_i(rf_raddr_a),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_raddr_b_i(rf_raddr_b),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    
+    .ex_valid_i(ex_valid),  // CONNECTED (t\u1eeb output c\u1ee7a id_stage)
+
+    .en_wb_o(en_wb)  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
 
 
-  )
+  );
 
   ///////////////////
   //    EX Stage   //
@@ -810,7 +836,7 @@ module riscv_core import ibex_pkg::*; #(
     .multdiv_operator_EX    (multdiv_operator_ex),    // CONNECTED (t\u1eeb output c\u1ee7a id_stage)
     .multdiv_signed_mode_EX (multdiv_signed_mode_ex), // CONNECTED (t\u1eeb output c\u1ee7a id_stage)
 
-    .multdiv_ready_id_i   (),   // NOT DONE ( t\u1eeb FSM )
+    .multdiv_ready_id_i   (multdiv_ready_id),   // NOT DONE ( t\u1eeb FSM )
     .data_ind_timing_i    (data_ind_timing),   // NOT DONE ( t\u1eeb FSM )
 
     // CSR
@@ -853,12 +879,12 @@ module riscv_core import ibex_pkg::*; #(
     .alu_operator_EX(alu_operator_ex),
     .alu_op_a_mux_sel_EX(alu_op_a_mux_sel_ex),
     .alu_op_b_mux_sel_EX(alu_op_b_mux_sel_ex),
-    .alu_instr_first_cycle_i(),
+    .alu_instr_first_cycle_i(instr_first_cycle_id),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
 
     // intermediate val reg
-    .imd_val_we_o(),    // NOT DONE () //to FSM
-    .imd_val_d_o(),     // NOT DONE ()
-    .imd_val_q_i(),     // NOT DONE ()
+    // .imd_val_we_o(imd_val_we_ex),    // NOT DONE () //to FSM
+    // .imd_val_d_o(),     // NOT DONE ()
+    // .imd_val_q_i(),     // NOT DONE ()
 
     // Outputs
     .alu_adder_result_ex_o(alu_adder_result_ex),
@@ -916,7 +942,7 @@ module riscv_core import ibex_pkg::*; #(
     .addr_last_o(lsu_addr_last), //to EX
 
     .lsu_resp_valid_o(lsu_resp_valid), //to FSM
-
+    //
     //exception signals
     .load_err_o(lsu_load_err),
     .load_resp_intg_err_o(lsu_load_resp_intg_err),
@@ -1312,7 +1338,7 @@ ibex_cs_registers #(
     .csr_save_cause_i  (csr_save_cause),
     .csr_mcause_i      (exc_cause),
     .csr_mtval_i       (csr_mtval),
-    .illegal_csr_insn_o(illegal_csr_insn_id),
+    .illegal_csr_insn_o(illegal_csr_insn_id)
 
     // .double_fault_seen_o,
   );
