@@ -9,19 +9,19 @@ module ibex_fsm_control# (
   input logic rst_ni,
 
   input logic dret_insn_dec_i,
-  output logic debug_mode_o,
+  //output logic debug_mode_o,
 
   input logic mret_insn_dec_i,
   input logic csr_mstatus_tw_i,
   input logic wfi_insn_dec_i,
 
   output logic illegal_insn_o,
-  input logic instr_valid_i,
+  //input logic instr_valid_i,
   input logic illegal_insn_dec_i,
   input logic illegal_csr_insn_i,
 
-  input logic lsu_load_resp_intg_err_i,
-  input logic lsu_store_resp_intg_err_i,
+  //input logic lsu_load_resp_intg_err_i,
+  //input logic lsu_store_resp_intg_err_i,
 
   input logic ecall_insn_dec_i,
   input logic ebrk_insn_i,
@@ -38,7 +38,7 @@ module ibex_fsm_control# (
 
   input  logic [31:0]               pc_id_i,
 
-  output logic                      instr_valid_clear_o,
+  //output logic                      instr_valid_clear_o,
   //output logic                      id_in_ready_o,
   output logic                      id_in_ready_o,         // ID stage is ready for next instr
   input  logic                      instr_exec_i,
@@ -48,7 +48,7 @@ module ibex_fsm_control# (
   output logic                      pc_set_o,
   output ibex_pkg::pc_sel_e         pc_mux_o,
   output logic                      nt_branch_mispredict_o,
-  output logic [31:0]               nt_branch_addr_o,
+  //output logic [31:0]               nt_branch_addr_o,
   output ibex_pkg::exc_pc_sel_e     exc_pc_mux_o,
   output ibex_pkg::exc_cause_t      exc_cause_o,
   output logic                      instr_first_cycle_id_o,
@@ -60,7 +60,7 @@ module ibex_fsm_control# (
   input  logic                      lsu_store_err_i,
   input  logic                      lsu_store_resp_intg_err_i,
 
-  input logic branch_in_dec_i, //from decoder
+  //input logic branch_in_dec_i, //from decoder
   input logic jump_in_dec_i, //from decoder
 
   // Interrupt signals
@@ -148,7 +148,6 @@ module ibex_fsm_control# (
   logic        stall_id;
   logic        stall_wb;
   logic        flush_id;
-  logic        stall_id;
   logic        instr_done;
   logic        multicycle_done;
 
@@ -162,13 +161,11 @@ module ibex_fsm_control# (
   logic        wb_exception;
   logic        id_exception;
 
-  logic        branch_in_dec = branch_in_dec_i;
   logic        branch_set, branch_set_raw, branch_set_raw_d;
   logic        branch_jump_set_done_q, branch_jump_set_done_d;
   logic        branch_not_set;
   logic        branch_taken;
   logic        jump_in_dec = jump_in_dec_i;
-  logic        jump_set_dec;
   logic        jump_set, jump_set_raw;
 
   logic        illegal_dret_insn;
@@ -192,6 +189,9 @@ module ibex_fsm_control# (
   
   logic        stall_alu;
 
+  logic	instr_executing;
+  logic instr_executing_spec;
+
 
 
     import ibex_pkg::*;
@@ -203,7 +203,7 @@ module ibex_fsm_control# (
   // Executing DRET outside of Debug Mode causes an illegal instruction exception.
   assign illegal_dret_insn  = dret_insn_dec & ~debug_mode_o;
   // Some instructions can only be executed in M-Mode
-  assign illegal_umode_insn = (priv_mode_i != PRIV_LVL_M) &
+  assign illegal_umode_insn = (priv_mode_id_i != PRIV_LVL_M) &
                               // MRET must be in M-Mode. TW means trap WFI to M-Mode.
                               (mret_insn_dec | (csr_mstatus_tw_i & wfi_insn_dec));
 
@@ -214,8 +214,7 @@ module ibex_fsm_control# (
 
   ibex_controller #(
     .WritebackStage (WritebackStage),
-    .BranchPredictor(BranchPredictor),
-    .MemECC(MemECC)
+    .BranchPredictor(BranchPredictor)
   ) controller_i (
     .clk_i (clk_i),
     .rst_ni(rst_ni),
@@ -283,7 +282,7 @@ module ibex_fsm_control# (
     .csr_restore_dret_id_o(csr_restore_dret_id_o),
     .csr_save_cause_o     (csr_save_cause_o),
     .csr_mtval_o          (csr_mtval_o),
-    .priv_mode_i          (priv_mode_i),
+    .priv_mode_i          (priv_mode_id_i),
 
     // Debug Signal
     .debug_mode_o         (debug_mode_o),
@@ -623,7 +622,7 @@ module ibex_fsm_control# (
     // assign rf_rdata_a_fwd = rf_rd_a_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_a_i;
     // assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
     
-    logic outstanding_load_wb_i = 1'b0;
+    // logic outstanding_load_wb_i = 1'b0;
 
     assign stall_ld_hz = outstanding_load_wb_i & (rf_rd_a_hz | rf_rd_b_hz);
 

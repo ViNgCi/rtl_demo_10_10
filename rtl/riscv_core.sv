@@ -425,6 +425,10 @@ module riscv_core import ibex_pkg::*; #(
   logic [33:0]           imd_val_d_o[2];
   logic [33:0]           imd_val_q_i[2];
 
+  logic [4:0] rf_waddr_ex_wb;
+  logic [31:0] rf_wdata_ex_wb;
+  logic rf_we_ex_wb;
+
   
   //////////////////////
   // Clock management //
@@ -688,19 +692,19 @@ module riscv_core import ibex_pkg::*; #(
     .rst_ni(rst_ni),
 
     .dret_insn_dec_i(dret_insn),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
-    .debug_mode_o(debug_mode),    // NOT DONE (t\u1ee
+    //.debug_mode_o(debug_mode),    // NOT DONE (t\u1ee
 
     .mret_insn_dec_i(mret_insn),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .csr_mstatus_tw_i(csr_mstatus_tw),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .wfi_insn_dec_i(wfi_insn),    // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
 
     .illegal_insn_o(illegal_insn_id),
-    .instr_valid_i(instr_valid_id),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
+    //.instr_valid_i(instr_valid_id),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
     .illegal_insn_dec_i(illegal_insn_dec),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .illegal_csr_insn_i(illegal_csr_insn_id),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
     
-    .lsu_load_resp_intg_err_i(lsu_load_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .lsu_store_resp_intg_err_i(lsu_store_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    //.lsu_load_resp_intg_err_i(lsu_load_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    //.lsu_store_resp_intg_err_i(lsu_store_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     
     .ecall_insn_dec_i(ecall_insn),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
     .ebrk_insn_i(ebrk_insn),  // NOT DONE (t\u1eeb output c\u1ee7a id_stage)
@@ -716,7 +720,7 @@ module riscv_core import ibex_pkg::*; #(
 
     .pc_id_i(pc_id),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
 
-    .instr_valid_clear_o(instr_valid_clear),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    //.instr_valid_clear_o(instr_valid_clear),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .id_in_ready_o(id_in_ready),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .instr_exec_i(instr_exec),  // CONNECTED (t\u1eeb output c\u1ee7a if_stage)
 
@@ -724,7 +728,7 @@ module riscv_core import ibex_pkg::*; #(
     .pc_set_o(pc_set),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .pc_mux_o(pc_mux_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .nt_branch_mispredict_o(nt_branch_mispredict),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .nt_branch_addr_o(nt_branch_addr),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    //.nt_branch_addr_o(nt_branch_addr),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .exc_pc_mux_o(exc_pc_mux_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .exc_cause_o(exc_cause),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .instr_first_cycle_id_o(instr_first_cycle_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
@@ -736,14 +740,14 @@ module riscv_core import ibex_pkg::*; #(
     .lsu_store_err_i(lsu_store_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .lsu_store_resp_intg_err_i(lsu_store_resp_intg_err),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
-    .branch_in_dec_i(branch_in_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    //.branch_in_dec_i(branch_in_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .jump_in_dec_i(jump_in_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     
     .csr_mstatus_mie_i(csr_mstatus_mie),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .irq_pending_i(irq_pending),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .irqs_i(irqs),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .irq_nm_i(irq_nm),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
-    .nmi_mode_i(nmi_mode),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .nmi_mode_o(nmi_mode),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
     .expecting_load_resp_o(expecting_load_resp),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .expecting_store_resp_o(expecting_store_resp),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
@@ -799,7 +803,7 @@ module riscv_core import ibex_pkg::*; #(
     .rf_ren_a_i(rf_ren_a),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .rf_ren_b_i(rf_ren_b),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
-    .rf_waddr_i(rf_waddr),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_waddr_wb_i(rf_waddr_wb),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
     .rf_raddr_a_i(rf_raddr_a),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .rf_raddr_b_i(rf_raddr_b),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
@@ -895,9 +899,9 @@ module riscv_core import ibex_pkg::*; #(
 
     .ex_valid_o(ex_valid),  // NOT DONE (output t\u1eeb FSM)
 
-    .rf_waddr_EX_o(rf_waddr_ex),
-    .rf_wdata_EX_o(rf_wdata_ex),
-    .rf_we_EX_o(rf_we_ex)
+    .rf_waddr_EX_o(rf_waddr_ex_wb),
+    .rf_wdata_EX_o(rf_wdata_ex_wb),
+    .rf_we_EX_o(rf_we_ex_wb)
 
   );
 
@@ -962,16 +966,17 @@ module riscv_core import ibex_pkg::*; #(
     .clk_i (clk_i),
     .rst_ni(rst_ni),
 
-    .rf_waddr_EX    (rf_waddr_ex),    // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
-    .rf_wdata_EX    (rf_wdata_ex),    // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
-    .rf_we_EX       (rf_we_ex),       // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_waddr_EX    (rf_waddr_ex_wb),    // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_wdata_EX    (rf_wdata_ex_wb),    // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
+    .rf_we_EX       (rf_we_ex_wb),       // CONNECTED (t\u1eeb output c\u1ee7a ex_stage)
 
     .rf_wdata_lsu_i (rf_wdata_lsu),   // CONNECTED (t\u1eeb output c\u1ee7a load store unit)
     .rf_we_lsu_i    (rf_we_lsu),      // CONNECTED (t\u1eeb output c\u1ee7a load store unit)
-    
+
+    .rf_waddr_WB_o  (rf_waddr_wb),    // CONNECTED (t\u1edbi input c\u1ee7a regfile)
     .rf_wdata_WB_o  (rf_wdata_wb),    // CONNECTED (t\u1edbi input c\u1ee7a regfile)
-    .rf_we_WB_o     (rf_we_wb),       // CONNECTED (t\u1edbi input c\u1ee7a regfile)
-    .rf_waddr_WB_o  (rf_waddr_wb)    // CONNECTED (t\u1edbi input c\u1ee7a regfile)
+    .rf_we_WB_o     (rf_we_wb)      // CONNECTED (t\u1edbi input c\u1ee7a regfile)
+    
   );
 
     // For non-secure configurations trust the bus protocol is being followed and we'll only ever
