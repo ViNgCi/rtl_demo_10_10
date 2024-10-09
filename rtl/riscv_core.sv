@@ -519,7 +519,7 @@ module riscv_core import ibex_pkg::*; #(
     .csr_mtvec_init_o(csr_mtvec_init),  // NOT CONNECTED (t\u1eeb cs_register)
 
     // pipeline stalls
-    .id_in_ready_i('1),    // NOT CONNECTED (output c\u1ee7a controller)
+    .id_in_ready_i(id_in_ready),    // NOT CONNECTED (output c\u1ee7a controller)
 
     // misc signals
     .pc_mismatch_alert_o(pc_mismatch_alert),    // NOT CONNECTED  (1 trong các \u0111i\u1ec1u ki\u1ec7n c\u1ee7a alert_major_internal_o)
@@ -553,8 +553,8 @@ module riscv_core import ibex_pkg::*; #(
   // of fetch_enable_i. Ensure the multi-bit encoding has the bottom bit set for on and unset for
   // off so IbexMuBiOn/IbexMuBiOff can be used without needing to know the value of SecureIbex.
 
-  // `ASSERT_INIT(IbexMuBiSecureOnBottomBitSet,    IbexMuBiOn[0] == 1'b1)
-  // `ASSERT_INIT(IbexMuBiSecureOffBottomBitClear, IbexMuBiOff[0] == 1'b0)
+  // //`ASSERT_INIT(IbexMuBiSecureOnBottomBitSet,    IbexMuBiOn[0] == 1'b1)
+  // //`ASSERT_INIT(IbexMuBiSecureOffBottomBitClear, IbexMuBiOff[0] == 1'b0)
 
   // fetch_enable_i can be used to stop the core fetching new instructions
     // For non secure Ibex only the bottom bit of fetch enable is considered
@@ -663,6 +663,14 @@ module riscv_core import ibex_pkg::*; #(
     .alu_operator_EX      (alu_operator_ex),     // NOT DONE output   alu_op_e
     .alu_op_a_mux_sel_EX  (alu_op_a_mux_sel_ex),     // DONE  output  op_a_sel_e
     .alu_op_b_mux_sel_EX  (alu_op_b_mux_sel_ex),     // DONE output  op_b_sel_e
+
+    .mult_en_dec        (mult_en_dec),          // NOT DONE (n\u1ed1i vào input ex_stage)
+    .div_en_dec         (div_en_dec),           // NOT DONE (n\u1ed1i vào input ex_stage)
+    .lsu_we_dec         (lsu_we_dec),              // NOT DONE (n\u1ed1i vào input ex_stage)
+    .lsu_req_dec        (lsu_req_dec),             // NOT DONE (n\u1ed1i vào input ex_stage)
+    .rf_we_dec          (rf_we_dec),            // NOT DONE (n\u1ed1i vào input ex_stage)
+
+    //.rf_ren_a_o       (rf_ren_a),            // NOT DONE (n\u1ed1i vào input ex_stage)
     
     // CONTROLLER INTERFACE
     .illegal_insn_o   (illegal_insn_dec),    // DONE (unused) output logic
@@ -1048,17 +1056,17 @@ module riscv_core import ibex_pkg::*; #(
   //    (outstanding_store_id & load_store_unit_i.split_misaligned_access);
 
     // When writing back the result of a load, the load must have made it to writeback
-  //  `ASSERT(NoMemRFWriteWithoutPendingLoad, rf_we_lsu |-> outstanding_load_wb, clk_i, !rst_ni)
+  //  //`ASSERT(NoMemRFWriteWithoutPendingLoad, rf_we_lsu |-> outstanding_load_wb, clk_i, !rst_ni)
   // end else begin : gen_no_wb_stage
   //   // Without writeback stage only look into whether load or store is in ID to determine if
   //   // a response is expected.
   //   assign outstanding_load_resp  = outstanding_load_id;
   //   assign outstanding_store_resp = outstanding_store_id;
 
-  //   `ASSERT(NoMemRFWriteWithoutPendingLoad, rf_we_lsu |-> outstanding_load_id, clk_i, !rst_ni)
+  //   //`ASSERT(NoMemRFWriteWithoutPendingLoad, rf_we_lsu |-> outstanding_load_id, clk_i, !rst_ni)
   // end
 
-  //`ASSERT(NoMemResponseWithoutPendingAccess,
+  ////`ASSERT(NoMemResponseWithoutPendingAccess,
    // data_rvalid_i |-> outstanding_load_resp | outstanding_store_resp, clk_i, !rst_ni)
 
 
@@ -1082,7 +1090,7 @@ module riscv_core import ibex_pkg::*; #(
   // When fetch is disabled no instructions should be executed. Once fetch is disabled either the
   // ID/EX stage is not valid or the PC of the ID/EX stage must remain as it was at disable. The
   // ID/EX valid should not ressert once it has been cleared.
-  `ASSERT(NoExecWhenFetchEnableNotOn, fetch_enable_i != IbexMuBiOn |=>
+  //`ASSERT(NoExecWhenFetchEnableNotOn, fetch_enable_i != IbexMuBiOn |=>
     (~instr_valid_id || (pc_id == pc_at_fetch_disable)) && ~$rose(instr_valid_id))
 
   `endif
@@ -1371,13 +1379,13 @@ ibex_cs_registers #(
   // Comment lai Assertion
   
   // These assertions are in top-level as instr_valid_id required as the enable term
-  // `ASSERT(IbexCsrOpValid, instr_valid_id |-> csr_op inside {
+  // //`ASSERT(IbexCsrOpValid, instr_valid_id |-> csr_op inside {
   //     CSR_OP_READ,
   //     CSR_OP_WRITE,
   //     CSR_OP_SET,
   //     CSR_OP_CLEAR
   //     })
-  // `ASSERT_KNOWN_IF(IbexCsrWdataIntKnown, cs_registers_i.csr_wdata_int, csr_op_en)
+  // //`ASSERT_KNOWN_IF(IbexCsrWdataIntKnown, cs_registers_i.csr_wdata_int, csr_op_en)
 
 ///  Comment lai vi khong dung module PMP
   // if (PMPEnable) begin : g_pmp

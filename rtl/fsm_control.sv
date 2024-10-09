@@ -580,12 +580,12 @@ module ibex_fsm_control# (
                              ~stall_ld_hz               &
                              ~outstanding_memory_access;
 
-//    `ASSERT(IbexExecutingSpecIfExecuting, instr_executing |-> instr_executing_spec)
+//    //`ASSERT(IbexExecutingSpecIfExecuting, instr_executing |-> instr_executing_spec)
 
-//    `ASSERT(IbexStallIfValidInstrNotExecuting,
+//    //`ASSERT(IbexStallIfValidInstrNotExecuting,
 //      instr_valid_i & ~instr_kill & ~instr_executing |-> stall_id)
 
-//    `ASSERT(IbexCannotRetireWithPendingExceptions,
+//    //`ASSERT(IbexCannotRetireWithPendingExceptions,
 //      instr_done |-> ~(wb_exception | outstanding_memory_access))
 
     // Stall for reasons related to memory:
@@ -598,7 +598,7 @@ module ibex_fsm_control# (
 
     // If we stall a load in ID for any reason, it must not make an LSU request
     // (otherwide we might issue two requests for the same instruction)
-//    `ASSERT(IbexStallMemNoRequest,
+//    //`ASSERT(IbexStallMemNoRequest,
 //      instr_valid_i & lsu_req_dec & ~instr_done |-> ~lsu_req_done_i)
 
     logic rf_ren_a = rf_ren_a_i;

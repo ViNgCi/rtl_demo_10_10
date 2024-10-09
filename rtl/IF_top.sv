@@ -231,7 +231,7 @@ module IF_top import ibex_pkg::*; #(
 
   // We should never see a mispredict and an incoming branch on the same cycle. The mispredict also
   // cancels any predicted branch so overall branch_req must be low.
- // `ASSERT(NoMispredBranch, nt_branch_mispredict_i |-> ~branch_req)
+ // //`ASSERT(NoMispredBranch, nt_branch_mispredict_i |-> ~branch_req)
  
      ///////////
     // ICache //

@@ -23,9 +23,9 @@
 module ID_top import ibex_pkg::*; #(
   parameter bit               RV32E           = 0,
   parameter ibex_pkg::rv32m_e RV32M           = ibex_pkg::RV32MFast,
-  parameter ibex_pkg::rv32b_e RV32B           = ibex_pkg::RV32BNone,
+  parameter ibex_pkg::rv32b_e RV32B           = ibex_pkg::RV32BBalanced,
   parameter bit               DataIndTiming   = 1'b0,
-  parameter bit               BranchTargetALU = 0,
+  parameter bit               BranchTargetALU = 1,
   parameter bit               WritebackStage  = 0,
   parameter bit               BranchPredictor = 0,
   parameter bit               MemECC          = 1'b0
@@ -118,12 +118,13 @@ module ID_top import ibex_pkg::*; #(
   output logic mult_en_dec,
   output logic div_en_dec,
   output logic lsu_we_dec,
+  output logic lsu_req_dec,
   output logic rf_we_dec,
 
-  output logic rf_ren_a_o,
-  output logic rf_ren_b_o,
+  //output logic rf_ren_a_o,
+  //output logic rf_ren_b_o,
 
-  output logic [4:0] rf_waddr_wb_o,
+  //output logic [4:0] rf_waddr_wb_o,
 
 
   
@@ -253,8 +254,8 @@ module ID_top import ibex_pkg::*; #(
      ////////////////  
      alu_decoder #(
      .RV32E (0),
-     .RV32M (ibex_pkg::RV32MFast),
-     .RV32B (ibex_pkg::RV32BNone),
+     .RV32M (RV32MFast),
+     .RV32B (RV32B),
      .BranchTargetALU(1)
     ) u_alu_decoder
     (   
@@ -311,8 +312,8 @@ module ID_top import ibex_pkg::*; #(
     logic jump_set_dec;
     instr_decoder #(
      .RV32E (0),
-     .RV32M (ibex_pkg::RV32MSlow),
-     .RV32B (ibex_pkg::RV32BNone),
+     .RV32M (RV32MFast),
+     .RV32B (RV32B),
      .BranchTargetALU(1)
     ) u_instr_decoder (
       .clk_i(clk_i),
@@ -585,6 +586,8 @@ module ID_top import ibex_pkg::*; #(
 
   assign rf_ren_a_o = rf_ren_a_dec;
   assign rf_ren_b_o = rf_ren_b_dec;
+
+  assign lsu_req_dec = lsu_req;
 
 
 endmodule

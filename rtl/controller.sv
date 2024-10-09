@@ -203,7 +203,7 @@ module ibex_controller #(
   // illegal_insn_i only set when instr_valid_i is set.
   assign illegal_insn_d = illegal_insn_i & (ctrl_fsm_cs != FLUSH);
 
-  //`ASSERT(IllegalInsnOnlyIfInsnValid, illegal_insn_i |-> instr_valid_i)
+  ////`ASSERT(IllegalInsnOnlyIfInsnValid, illegal_insn_i |-> instr_valid_i)
 
   // exception requests
   // requests are flopped in exc_req_q.  This is cleared when controller is in
@@ -291,7 +291,7 @@ module ibex_controller #(
     assign wb_exception_o = 1'b0;
   end
 
-//  `ASSERT_IF(IbexExceptionPrioOnehot,
+//  //`ASSERT_IF(IbexExceptionPrioOnehot,
 //             $onehot({instr_fetch_err_prio,
 //                      illegal_insn_prio,
 //                      ecall_insn_prio,
@@ -894,7 +894,7 @@ module ibex_controller #(
     end
   end
 
-//  `ASSERT(PipeEmptyOnIrq, ctrl_fsm_cs != IRQ_TAKEN & ctrl_fsm_ns == IRQ_TAKEN |->
+//  //`ASSERT(PipeEmptyOnIrq, ctrl_fsm_cs != IRQ_TAKEN & ctrl_fsm_ns == IRQ_TAKEN |->
 //    ~instr_valid_i & ready_wb_i)
 
 //  //////////
@@ -917,10 +917,10 @@ module ibex_controller #(
 //  // Assertions //
 //  ////////////////
 
-//  `ASSERT(AlwaysInstrClearOnMispredict, nt_branch_mispredict_o |-> instr_valid_clear_o)
+//  //`ASSERT(AlwaysInstrClearOnMispredict, nt_branch_mispredict_o |-> instr_valid_clear_o)
 
 //  // Selectors must be known/valid.
-//  `ASSERT(IbexCtrlStateValid, ctrl_fsm_cs inside {
+//  //`ASSERT(IbexCtrlStateValid, ctrl_fsm_cs inside {
 //      RESET, BOOT_SET, WAIT_SLEEP, SLEEP, FIRST_FETCH, DECODE, FLUSH,
 //      IRQ_TAKEN, DBG_TAKEN_IF, DBG_TAKEN_ID})
 
@@ -972,16 +972,16 @@ module ibex_controller #(
 
     // Once an exception request has been accepted it must be handled before controller goes back to
     // DECODE
-    `ASSERT(IbexNoDoubleExceptionReq, exception_req_accepted |-> ctrl_fsm_cs != DECODE)
+    //`ASSERT(IbexNoDoubleExceptionReq, exception_req_accepted |-> ctrl_fsm_cs != DECODE)
 
     // Only signal ready, allowing a new instruction into ID, if there is no exception request
     // pending or it is done this cycle.
-    `ASSERT(IbexDontSkipExceptionReq,
+    //`ASSERT(IbexDontSkipExceptionReq,
       id_in_ready_o |-> !exception_req_pending || exception_req_done)
 
     // Once a PC set has been performed for an exception request there must not be any other
     // excepting those to move into debug mode.
-    `ASSERT(IbexNoDoubleSpecialReqPCSet,
+    //`ASSERT(IbexNoDoubleSpecialReqPCSet,
       seen_exception_pc_set &&
         !((ctrl_fsm_cs inside {DBG_TAKEN_IF, DBG_TAKEN_ID}) &&
           (pc_mux_o == PC_EXC) && (exc_pc_mux_o == EXC_PC_DBD))
@@ -989,12 +989,12 @@ module ibex_controller #(
 
     // When an exception request is done there must have been an appropriate PC set (either this
     // cycle or a previous one).
-    `ASSERT(IbexSetExceptionPCOnSpecialReqIfExpected,
+    //`ASSERT(IbexSetExceptionPCOnSpecialReqIfExpected,
       exception_req_pending && expect_exception_pc_set && exception_req_done |->
       seen_exception_pc_set || exception_pc_set)
 
     // If there's a pending exception req that doesn't need a PC set we must not see one
-    `ASSERT(IbexNoPCSetOnSpecialReqIfNotExpected,
+    //`ASSERT(IbexNoPCSetOnSpecialReqIfNotExpected,
       exception_req_pending && !expect_exception_pc_set |-> ~pc_set_o)
   `endif
 

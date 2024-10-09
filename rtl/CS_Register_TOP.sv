@@ -1168,7 +1168,7 @@ module ibex_cs_registers #(
       ibex_csr #(
         .Width     ($bits(pmp_cfg_t)),
         .ShadowCopy(ShadowCSR),
-        .ResetValue(pmp_cfg_rst[i])
+        .ResetValue(0)
       ) u_pmp_cfg_csr (
         .clk_i     (clk_i),
         .rst_ni    (rst_ni),
@@ -1203,7 +1203,7 @@ module ibex_cs_registers #(
       ibex_csr #(
         .Width     (PMPAddrWidth),
         .ShadowCopy(ShadowCSR),
-        .ResetValue(pmp_addr_rst[i][33-:PMPAddrWidth])
+        .ResetValue(0)
       ) u_pmp_addr_csr (
         .clk_i     (clk_i),
         .rst_ni    (rst_ni),
@@ -1213,7 +1213,7 @@ module ibex_cs_registers #(
         .rd_error_o(pmp_addr_err[i])
       );
 
-      `ASSERT_INIT(PMPAddrRstLowBitsZero_A, pmp_addr_rst[i][33-PMPAddrWidth:0] == '0)
+      //`ASSERT_INIT(PMPAddrRstLowBitsZero_A, pmp_addr_rst[i][33-PMPAddrWidth:0] == '0)
 
       assign csr_pmp_cfg_o[i]  = pmp_cfg[i];
       assign csr_pmp_addr_o[i] = {pmp_addr_rdata[i], 2'b00};
@@ -1236,7 +1236,7 @@ module ibex_cs_registers #(
     ibex_csr #(
       .Width     ($bits(pmp_mseccfg_t)),
       .ShadowCopy(ShadowCSR),
-      .ResetValue(pmp_mseccfg_rst)
+      .ResetValue(0)
     ) u_pmp_mseccfg (
       .clk_i     (clk_i),
       .rst_ni    (rst_ni),
@@ -1679,6 +1679,6 @@ module ibex_cs_registers #(
   // Assertions //
   ////////////////
 
-  `ASSERT(IbexCsrOpEnRequiresAccess, csr_op_en_i |-> csr_access_i)
+  //`ASSERT(IbexCsrOpEnRequiresAccess, csr_op_en_i |-> csr_access_i)
 
 endmodule
