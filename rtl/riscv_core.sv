@@ -1091,7 +1091,7 @@ module riscv_core import ibex_pkg::*; #(
   // ID/EX stage is not valid or the PC of the ID/EX stage must remain as it was at disable. The
   // ID/EX valid should not ressert once it has been cleared.
   //`ASSERT(NoExecWhenFetchEnableNotOn, fetch_enable_i != IbexMuBiOn |=>
-    (~instr_valid_id || (pc_id == pc_at_fetch_disable)) && ~$rose(instr_valid_id))
+    // (~instr_valid_id || (pc_id == pc_at_fetch_disable)) && ~$rose(instr_valid_id))
 
   `endif
 
@@ -1140,124 +1140,124 @@ module riscv_core import ibex_pkg::*; #(
   );
 
 
-  //////////////////////
-  //  RVFI Interface  //
-  //////////////////////
+  // //////////////////////
+  // //  RVFI Interface  //
+  // //////////////////////
 
-  // 4 stage pipeline requires 3 set (instr_info -> ex -> wb)
-  localparam int RVFI_STAGES = 3;
+  // // 4 stage pipeline requires 3 set (instr_info -> ex -> wb)
+  // localparam int RVFI_STAGES = 3;
 
-  logic        rvfi_instr_new_wb;
-  logic        rvfi_intr_d;
-  logic        rvfi_intr_q;
-  logic        rvfi_set_trap_pc_d;
-  logic        rvfi_set_trap_pc_q;
-  logic [31:0] rvfi_insn_id;
-  logic [4:0]  rvfi_rs1_addr_d;
-  logic [4:0]  rvfi_rs1_addr_q;
-  logic [4:0]  rvfi_rs2_addr_d;
-  logic [4:0]  rvfi_rs2_addr_q;
-  logic [4:0]  rvfi_rs3_addr_d;
-  logic [31:0] rvfi_rs1_data_d;
-  logic [31:0] rvfi_rs1_data_q;
-  logic [31:0] rvfi_rs2_data_d;
-  logic [31:0] rvfi_rs2_data_q;
-  logic [31:0] rvfi_rs3_data_d;
-  logic [4:0]  rvfi_rd_addr_wb;
-  logic [4:0]  rvfi_rd_addr_q;
-  logic [4:0]  rvfi_rd_addr_d;
-  logic [31:0] rvfi_rd_wdata_wb;
-  logic [31:0] rvfi_rd_wdata_d;
-  logic [31:0] rvfi_rd_wdata_q;
-  logic        rvfi_rd_we_wb;
-  logic [3:0]  rvfi_mem_mask_int;
-  logic [31:0] rvfi_mem_rdata_d;
-  logic [31:0] rvfi_mem_rdata_q;
-  logic [31:0] rvfi_mem_wdata_d;
-  logic [31:0] rvfi_mem_wdata_q;
-  logic [31:0] rvfi_mem_addr_d;
-  logic [31:0] rvfi_mem_addr_q;
-  logic        rvfi_trap_id;
-  logic        rvfi_trap_wb;
-  logic        rvfi_irq_valid;
-  logic [63:0] rvfi_stage_order_d;
-  logic        rvfi_id_done;
-  logic        rvfi_wb_done;
+  // logic        rvfi_instr_new_wb;
+  // logic        rvfi_intr_d;
+  // logic        rvfi_intr_q;
+  // logic        rvfi_set_trap_pc_d;
+  // logic        rvfi_set_trap_pc_q;
+  // logic [31:0] rvfi_insn_id;
+  // logic [4:0]  rvfi_rs1_addr_d;
+  // logic [4:0]  rvfi_rs1_addr_q;
+  // logic [4:0]  rvfi_rs2_addr_d;
+  // logic [4:0]  rvfi_rs2_addr_q;
+  // logic [4:0]  rvfi_rs3_addr_d;
+  // logic [31:0] rvfi_rs1_data_d;
+  // logic [31:0] rvfi_rs1_data_q;
+  // logic [31:0] rvfi_rs2_data_d;
+  // logic [31:0] rvfi_rs2_data_q;
+  // logic [31:0] rvfi_rs3_data_d;
+  // logic [4:0]  rvfi_rd_addr_wb;
+  // logic [4:0]  rvfi_rd_addr_q;
+  // logic [4:0]  rvfi_rd_addr_d;
+  // logic [31:0] rvfi_rd_wdata_wb;
+  // logic [31:0] rvfi_rd_wdata_d;
+  // logic [31:0] rvfi_rd_wdata_q;
+  // logic        rvfi_rd_we_wb;
+  // logic [3:0]  rvfi_mem_mask_int;
+  // logic [31:0] rvfi_mem_rdata_d;
+  // logic [31:0] rvfi_mem_rdata_q;
+  // logic [31:0] rvfi_mem_wdata_d;
+  // logic [31:0] rvfi_mem_wdata_q;
+  // logic [31:0] rvfi_mem_addr_d;
+  // logic [31:0] rvfi_mem_addr_q;
+  // logic        rvfi_trap_id;
+  // logic        rvfi_trap_wb;
+  // logic        rvfi_irq_valid;
+  // logic [63:0] rvfi_stage_order_d;
+  // logic        rvfi_id_done;
+  // logic        rvfi_wb_done;
 
-  logic            new_debug_req;
-  logic            new_nmi;
-  logic            new_nmi_int;
-  logic            new_irq;
-  ibex_pkg::irqs_t captured_mip;
-  logic            captured_nmi;
-  logic            captured_nmi_int;
-  logic            captured_debug_req;
-  logic            captured_valid;
+  // logic            new_debug_req;
+  // logic            new_nmi;
+  // logic            new_nmi_int;
+  // logic            new_irq;
+  // ibex_pkg::irqs_t captured_mip;
+  // logic            captured_nmi;
+  // logic            captured_nmi_int;
+  // logic            captured_debug_req;
+  // logic            captured_valid;
 
-  // RVFI extension for co-simulation support
-  // debug_req and MIP captured at IF -> ID transition so one extra stage
-  ibex_pkg::irqs_t rvfi_ext_stage_pre_mip          [RVFI_STAGES+1];
-  ibex_pkg::irqs_t rvfi_ext_stage_post_mip         [RVFI_STAGES];
-  logic            rvfi_ext_stage_nmi              [RVFI_STAGES+1];
-  logic            rvfi_ext_stage_nmi_int          [RVFI_STAGES+1];
-  logic            rvfi_ext_stage_debug_req        [RVFI_STAGES+1];
-  logic            rvfi_ext_stage_debug_mode       [RVFI_STAGES];
-  logic [63:0]     rvfi_ext_stage_mcycle           [RVFI_STAGES];
-  logic [31:0]     rvfi_ext_stage_mhpmcounters     [RVFI_STAGES][10];
-  logic [31:0]     rvfi_ext_stage_mhpmcountersh    [RVFI_STAGES][10];
-  logic            rvfi_ext_stage_ic_scr_key_valid [RVFI_STAGES];
-  logic            rvfi_ext_stage_irq_valid        [RVFI_STAGES+1];
+  // // RVFI extension for co-simulation support
+  // // debug_req and MIP captured at IF -> ID transition so one extra stage
+  // ibex_pkg::irqs_t rvfi_ext_stage_pre_mip          [RVFI_STAGES+1];
+  // ibex_pkg::irqs_t rvfi_ext_stage_post_mip         [RVFI_STAGES];
+  // logic            rvfi_ext_stage_nmi              [RVFI_STAGES+1];
+  // logic            rvfi_ext_stage_nmi_int          [RVFI_STAGES+1];
+  // logic            rvfi_ext_stage_debug_req        [RVFI_STAGES+1];
+  // logic            rvfi_ext_stage_debug_mode       [RVFI_STAGES];
+  // logic [63:0]     rvfi_ext_stage_mcycle           [RVFI_STAGES];
+  // logic [31:0]     rvfi_ext_stage_mhpmcounters     [RVFI_STAGES][10];
+  // logic [31:0]     rvfi_ext_stage_mhpmcountersh    [RVFI_STAGES][10];
+  // logic            rvfi_ext_stage_ic_scr_key_valid [RVFI_STAGES];
+  // logic            rvfi_ext_stage_irq_valid        [RVFI_STAGES+1];
 
 
-  logic        rvfi_stage_valid_d   [RVFI_STAGES];
+  // logic        rvfi_stage_valid_d   [RVFI_STAGES];
 
-  logic        rvfi_stage_valid     [RVFI_STAGES];
-  logic [63:0] rvfi_stage_order     [RVFI_STAGES];
-  logic [31:0] rvfi_stage_insn      [RVFI_STAGES];
-  logic        rvfi_stage_trap      [RVFI_STAGES];
-  logic        rvfi_stage_halt      [RVFI_STAGES];
-  logic        rvfi_stage_intr      [RVFI_STAGES];
-  logic [ 1:0] rvfi_stage_mode      [RVFI_STAGES];
-  logic [ 1:0] rvfi_stage_ixl       [RVFI_STAGES];
-  logic [ 4:0] rvfi_stage_rs1_addr  [RVFI_STAGES];
-  logic [ 4:0] rvfi_stage_rs2_addr  [RVFI_STAGES];
-  logic [ 4:0] rvfi_stage_rs3_addr  [RVFI_STAGES];
-  logic [31:0] rvfi_stage_rs1_rdata [RVFI_STAGES];
-  logic [31:0] rvfi_stage_rs2_rdata [RVFI_STAGES];
-  logic [31:0] rvfi_stage_rs3_rdata [RVFI_STAGES];
-  logic [ 4:0] rvfi_stage_rd_addr   [RVFI_STAGES];
-  logic [31:0] rvfi_stage_rd_wdata  [RVFI_STAGES];
-  logic [31:0] rvfi_stage_pc_rdata  [RVFI_STAGES];
-  logic [31:0] rvfi_stage_pc_wdata  [RVFI_STAGES];
-  logic [31:0] rvfi_stage_mem_addr  [RVFI_STAGES];
-  logic [ 3:0] rvfi_stage_mem_rmask [RVFI_STAGES];
-  logic [ 3:0] rvfi_stage_mem_wmask [RVFI_STAGES];
-  logic [31:0] rvfi_stage_mem_rdata [RVFI_STAGES];
-  logic [31:0] rvfi_stage_mem_wdata [RVFI_STAGES];
+  // logic        rvfi_stage_valid     [RVFI_STAGES];
+  // logic [63:0] rvfi_stage_order     [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_insn      [RVFI_STAGES];
+  // logic        rvfi_stage_trap      [RVFI_STAGES];
+  // logic        rvfi_stage_halt      [RVFI_STAGES];
+  // logic        rvfi_stage_intr      [RVFI_STAGES];
+  // logic [ 1:0] rvfi_stage_mode      [RVFI_STAGES];
+  // logic [ 1:0] rvfi_stage_ixl       [RVFI_STAGES];
+  // logic [ 4:0] rvfi_stage_rs1_addr  [RVFI_STAGES];
+  // logic [ 4:0] rvfi_stage_rs2_addr  [RVFI_STAGES];
+  // logic [ 4:0] rvfi_stage_rs3_addr  [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_rs1_rdata [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_rs2_rdata [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_rs3_rdata [RVFI_STAGES];
+  // logic [ 4:0] rvfi_stage_rd_addr   [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_rd_wdata  [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_pc_rdata  [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_pc_wdata  [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_mem_addr  [RVFI_STAGES];
+  // logic [ 3:0] rvfi_stage_mem_rmask [RVFI_STAGES];
+  // logic [ 3:0] rvfi_stage_mem_wmask [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_mem_rdata [RVFI_STAGES];
+  // logic [31:0] rvfi_stage_mem_wdata [RVFI_STAGES];
 
-  assign rvfi_valid     = rst_ni; //rvfi_stage_valid    [RVFI_STAGES-1];
-  assign rvfi_order     = 64'hFFFFFFFF; //rvfi_stage_order    [RVFI_STAGES-1];
-  assign rvfi_insn      = instr_rdata_id; //rvfi_stage_insn     [RVFI_STAGES-1];
-  assign rvfi_trap      = 1'b0; //rvfi_stage_trap     [RVFI_STAGES-1];
-  assign rvfi_halt      = 1'b0; //rvfi_stage_halt     [RVFI_STAGES-1];
-  assign rvfi_intr      = 1'b0; //rvfi_stage_intr     [RVFI_STAGES-1];
-  assign rvfi_mode      = 2'b0; //rvfi_stage_mode     [RVFI_STAGES-1];
-  assign rvfi_ixl       = 2'd1;  //rvfi_stage_ixl      [RVFI_STAGES-1];
-  assign rvfi_rs1_addr  = rvfi_stage_rs1_addr [RVFI_STAGES-1];
-  assign rvfi_rs2_addr  = rvfi_stage_rs2_addr [RVFI_STAGES-1];
-  assign rvfi_rs3_addr  = rvfi_stage_rs3_addr [RVFI_STAGES-1];
-  assign rvfi_rs1_rdata = rvfi_stage_rs1_rdata[RVFI_STAGES-1];
-  assign rvfi_rs2_rdata = rvfi_stage_rs2_rdata[RVFI_STAGES-1];
-  assign rvfi_rs3_rdata = rvfi_stage_rs3_rdata[RVFI_STAGES-1];
-  assign rvfi_rd_addr   = rvfi_stage_rd_addr  [RVFI_STAGES-1];
-  assign rvfi_rd_wdata  = rvfi_stage_rd_wdata [RVFI_STAGES-1];
-  assign rvfi_pc_rdata  = rvfi_stage_pc_rdata [RVFI_STAGES-1];
-  assign rvfi_pc_wdata  = rvfi_stage_pc_wdata [RVFI_STAGES-1];
-  assign rvfi_mem_addr  = rvfi_stage_mem_addr [RVFI_STAGES-1];
-  assign rvfi_mem_rmask = rvfi_stage_mem_rmask[RVFI_STAGES-1];
-  assign rvfi_mem_wmask = rvfi_stage_mem_wmask[RVFI_STAGES-1];
-  assign rvfi_mem_rdata = rvfi_stage_mem_rdata[RVFI_STAGES-1];
-  assign rvfi_mem_wdata = rvfi_stage_mem_wdata[RVFI_STAGES-1];
+  // assign rvfi_valid     = rst_ni; //rvfi_stage_valid    [RVFI_STAGES-1];
+  // assign rvfi_order     = 64'hFFFFFFFF; //rvfi_stage_order    [RVFI_STAGES-1];
+  // assign rvfi_insn      = instr_rdata_id; //rvfi_stage_insn     [RVFI_STAGES-1];
+  // assign rvfi_trap      = 1'b0; //rvfi_stage_trap     [RVFI_STAGES-1];
+  // assign rvfi_halt      = 1'b0; //rvfi_stage_halt     [RVFI_STAGES-1];
+  // assign rvfi_intr      = 1'b0; //rvfi_stage_intr     [RVFI_STAGES-1];
+  // assign rvfi_mode      = 2'b0; //rvfi_stage_mode     [RVFI_STAGES-1];
+  // assign rvfi_ixl       = 2'd1;  //rvfi_stage_ixl      [RVFI_STAGES-1];
+  // assign rvfi_rs1_addr  = rvfi_stage_rs1_addr [RVFI_STAGES-1];
+  // assign rvfi_rs2_addr  = rvfi_stage_rs2_addr [RVFI_STAGES-1];
+  // assign rvfi_rs3_addr  = rvfi_stage_rs3_addr [RVFI_STAGES-1];
+  // assign rvfi_rs1_rdata = rvfi_stage_rs1_rdata[RVFI_STAGES-1];
+  // assign rvfi_rs2_rdata = rvfi_stage_rs2_rdata[RVFI_STAGES-1];
+  // assign rvfi_rs3_rdata = rvfi_stage_rs3_rdata[RVFI_STAGES-1];
+  // assign rvfi_rd_addr   = rvfi_stage_rd_addr  [RVFI_STAGES-1];
+  // assign rvfi_rd_wdata  = rvfi_stage_rd_wdata [RVFI_STAGES-1];
+  // assign rvfi_pc_rdata  = rvfi_stage_pc_rdata [RVFI_STAGES-1];
+  // assign rvfi_pc_wdata  = rvfi_stage_pc_wdata [RVFI_STAGES-1];
+  // assign rvfi_mem_addr  = rvfi_stage_mem_addr [RVFI_STAGES-1];
+  // assign rvfi_mem_rmask = rvfi_stage_mem_rmask[RVFI_STAGES-1];
+  // assign rvfi_mem_wmask = rvfi_stage_mem_wmask[RVFI_STAGES-1];
+  // assign rvfi_mem_rdata = rvfi_stage_mem_rdata[RVFI_STAGES-1];
+  // assign rvfi_mem_wdata = rvfi_stage_mem_wdata[RVFI_STAGES-1];
 
 /////////////////////////////////////
 /// Control and Status Registers////
@@ -1357,6 +1357,465 @@ ibex_cs_registers #(
 
     // .double_fault_seen_o,
   );
+
+  `ifdef RVFI
+  //////////////////////
+  //  RVFI Interface  //
+  //////////////////////
+  // 4 stage pipeline requires 3 set (instr_info -> ex -> wb)
+  localparam int RVFI_STAGES = 3;
+  logic        rvfi_instr_new_wb;
+  logic        rvfi_intr_d;
+  logic        rvfi_intr_q;
+  logic        rvfi_set_trap_pc_d;
+  logic        rvfi_set_trap_pc_q;
+  logic [31:0] rvfi_insn_id;
+  logic [4:0]  rvfi_rs1_addr_d;
+  logic [4:0]  rvfi_rs1_addr_q;
+  logic [4:0]  rvfi_rs2_addr_d;
+  logic [4:0]  rvfi_rs2_addr_q;
+  logic [4:0]  rvfi_rs3_addr_d;
+  logic [31:0] rvfi_rs1_data_d;
+  logic [31:0] rvfi_rs1_data_q;
+  logic [31:0] rvfi_rs2_data_d;
+  logic [31:0] rvfi_rs2_data_q;
+  logic [31:0] rvfi_rs3_data_d;
+  logic [4:0]  rvfi_rd_addr_wb;
+  logic [4:0]  rvfi_rd_addr_q;
+  logic [4:0]  rvfi_rd_addr_d;
+  logic [31:0] rvfi_rd_wdata_wb;
+  logic [31:0] rvfi_rd_wdata_d;
+  logic [31:0] rvfi_rd_wdata_q;
+  logic        rvfi_rd_we_wb;
+  logic [3:0]  rvfi_mem_mask_int;
+  logic [31:0] rvfi_mem_rdata_d;
+  logic [31:0] rvfi_mem_rdata_q;
+  logic [31:0] rvfi_mem_wdata_d;
+  logic [31:0] rvfi_mem_wdata_q;
+  logic [31:0] rvfi_mem_addr_d;
+  logic [31:0] rvfi_mem_addr_q;
+  logic        rvfi_trap_id;
+  logic        rvfi_trap_wb;
+  logic        rvfi_irq_valid;
+  logic [63:0] rvfi_stage_order_d;
+  logic        rvfi_id_done;
+  logic        rvfi_ex_done;
+  logic        rvfi_wb_done;
+  logic            new_debug_req;
+  logic            new_nmi;
+  logic            new_nmi_int;
+  logic            new_irq;
+  ibex_pkg::irqs_t captured_mip;
+  logic            captured_nmi;
+  logic            captured_nmi_int;
+  logic            captured_debug_req;
+  logic            captured_valid;
+  // RVFI extension for co-simulation support
+  // debug_req and MIP captured at IF -> ID transition so one extra stage
+  ibex_pkg::irqs_t rvfi_ext_stage_pre_mip          [RVFI_STAGES+1];
+  ibex_pkg::irqs_t rvfi_ext_stage_post_mip         [RVFI_STAGES];
+  logic            rvfi_ext_stage_nmi              [RVFI_STAGES+1];
+  logic            rvfi_ext_stage_nmi_int          [RVFI_STAGES+1];
+  logic            rvfi_ext_stage_debug_req        [RVFI_STAGES+1];
+  logic            rvfi_ext_stage_debug_mode       [RVFI_STAGES];
+  logic [63:0]     rvfi_ext_stage_mcycle           [RVFI_STAGES];
+  logic [31:0]     rvfi_ext_stage_mhpmcounters     [RVFI_STAGES][10];
+  logic [31:0]     rvfi_ext_stage_mhpmcountersh    [RVFI_STAGES][10];
+  logic            rvfi_ext_stage_ic_scr_key_valid [RVFI_STAGES];
+  logic            rvfi_ext_stage_irq_valid        [RVFI_STAGES+1];
+  logic        rvfi_stage_valid_d   [RVFI_STAGES];
+  logic        rvfi_stage_valid     [RVFI_STAGES];
+  logic [63:0] rvfi_stage_order     [RVFI_STAGES];
+  logic [31:0] rvfi_stage_insn      [RVFI_STAGES];
+  logic        rvfi_stage_trap      [RVFI_STAGES];
+  logic        rvfi_stage_halt      [RVFI_STAGES];
+  logic        rvfi_stage_intr      [RVFI_STAGES];
+  logic [ 1:0] rvfi_stage_mode      [RVFI_STAGES];
+  logic [ 1:0] rvfi_stage_ixl       [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_rs1_addr  [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_rs2_addr  [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_rs3_addr  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_rs1_rdata [RVFI_STAGES];
+  logic [31:0] rvfi_stage_rs2_rdata [RVFI_STAGES];
+  logic [31:0] rvfi_stage_rs3_rdata [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_rd_addr   [RVFI_STAGES];
+  logic [31:0] rvfi_stage_rd_wdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_pc_rdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_pc_wdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_mem_addr  [RVFI_STAGES];
+  logic [ 3:0] rvfi_stage_mem_rmask [RVFI_STAGES];
+  logic [ 3:0] rvfi_stage_mem_wmask [RVFI_STAGES];
+  logic [31:0] rvfi_stage_mem_rdata [RVFI_STAGES];
+  logic [31:0] rvfi_stage_mem_wdata [RVFI_STAGES];
+  assign rvfi_id_done = instr_id_done;
+  assign rvfi_ex_done = ex_valid;
+  assign rvfi_wb_done = rvfi_stage_valid[0] & (instr_done_wb | rvfi_stage_trap[0]);
+  assign rvfi_rd_addr_wb  = rf_waddr_wb;
+  assign rvfi_rd_wdata_wb = rf_we_wb ? rf_wdata_wb : rf_wdata_lsu;
+  assign rvfi_rd_we_wb    = rf_we_wb | rf_we_lsu;
+  // assign rvfi_stage_valid_d[0] = (rvfi_id_done & ~dummy_instr_id) | (rvfi_stage_valid[0] & ~rvfi_wb_done);
+  assign rvfi_stage_valid_d[0] = (rvfi_id_done);
+  assign rvfi_stage_valid_d[1] = (rvfi_ex_done);
+  assign rvfi_stage_valid_d[RVFI_STAGES-1] = rvfi_wb_done;
+  // Memory address/write data available first cycle of ld/st instruction from register read
+  always_comb begin
+    if (instr_first_cycle_id) begin   // Need to check
+      rvfi_mem_addr_d  = alu_adder_result_ex;
+      rvfi_mem_wdata_d = lsu_wdata;
+    end else begin
+      rvfi_mem_addr_d  = rvfi_mem_addr_q;
+      rvfi_mem_wdata_d = rvfi_mem_wdata_q;
+    end
+  end
+  // Capture read data from LSU when it becomes valid
+  always_comb begin
+    if (lsu_resp_valid) begin   // Need to check
+      rvfi_mem_rdata_d = rf_wdata_lsu;
+    end else begin
+      rvfi_mem_rdata_d = rvfi_mem_rdata_q;
+    end
+  end
+  always_ff @(posedge clk_i or negedge rst_ni) begin    // Need to check
+    if (!rst_ni) begin
+      rvfi_mem_addr_q  <= '0;
+      rvfi_mem_rdata_q <= '0;
+      rvfi_mem_wdata_q <= '0;
+    end else begin
+      rvfi_mem_addr_q  <= rvfi_mem_addr_d;
+      rvfi_mem_rdata_q <= rvfi_mem_rdata_d;
+      rvfi_mem_wdata_q <= rvfi_mem_wdata_d;
+    end
+  end
+  // Byte enable based on data type
+  always_comb begin     // Need to check
+    unique case (lsu_type)
+      2'b00:   rvfi_mem_mask_int = 4'b1111;
+      2'b01:   rvfi_mem_mask_int = 4'b0011;
+      2'b10:   rvfi_mem_mask_int = 4'b0001;
+      default: rvfi_mem_mask_int = 4'b0000;
+    endcase
+  end
+  always_comb begin     // Need to check
+    if (instr_is_compressed_id) begin
+      rvfi_insn_id = {16'b0, instr_rdata_c_id};
+    end else begin
+      rvfi_insn_id = instr_rdata_id;
+    end
+  end
+  // NEED SIGNAL WB_DONE form wb_stage
+  // rvfi_valid
+  logic instr_done_wb_1;
+  // rvfi_insn
+  logic [31:0] rvfi_insn_id_1;
+  logic [31:0] rvfi_insn_id_2;
+  logic [31:0] rvfi_insn_id_3;
+  // rvfi_pc_rdata
+  logic [31:0] pc_id_1;
+  logic [31:0] pc_id_2;
+  //rvfi_pc_wdata
+  logic [31:0] pc_wdata;
+  assign pc_wdata = pc_set ? branch_target_ex : pc_if;
+  logic [31:0] pc_wdata_1;
+  logic [31:0] pc_wdata_2;
+  logic [31:0] pc_wdata_3;
+  //rvfi_mem_rmask
+  logic [4:0] rvfi_mem_rmask_int_1;
+  logic [4:0] rvfi_mem_rmask_int_2;
+  //rvfi_mem_wmask
+  logic [4:0] rvfi_mem_wmask_int_1;
+  logic [4:0] rvfi_mem_wmask_int_2;
+    
+  // rvfi_pc_rdata
+  always @(posedge clk_i or negedge rst_ni) begin
+    if(~rst_ni) begin
+      instr_done_wb_1 <= 0;
+      instr_done_wb <= 0;
+      rvfi_insn_id_1 <= 0;
+      rvfi_insn_id_2 <= 0;
+      rvfi_insn_id_3 <= 0;
+      pc_id_1 <= 0;
+      pc_id_2 <= 0;
+      pc_wdata_1 <= 0;
+      pc_wdata_2 <= 0;
+      pc_wdata_3 <= 0;
+      rvfi_mem_rmask_int_1 <= 0;
+      rvfi_mem_rmask_int_2 <= 0;
+      rvfi_mem_wmask_int_1 <= 0;
+      rvfi_mem_wmask_int_2 <= 0;
+    end else begin
+      instr_done_wb <= rf_we_wb;
+      instr_done_wb_1 <= instr_done_wb;
+      rvfi_insn_id_1 <= rvfi_insn_id;
+      rvfi_insn_id_2 <= rvfi_insn_id_1;
+      rvfi_insn_id_3 <= rvfi_insn_id_2;
+      pc_id_1 <= pc_id;
+      pc_id_2 <= pc_id_1;
+      pc_wdata_1 <= pc_wdata;
+      pc_wdata_2 <= pc_wdata_1;
+      pc_wdata_3 <= pc_wdata_2;
+      rvfi_mem_rmask_int_1 <= rvfi_mem_mask_int;
+      rvfi_mem_rmask_int_2 <= rvfi_mem_rmask_int_1;
+      rvfi_mem_wmask_int_1 <= data_we_o ? rvfi_mem_mask_int : 4'b0000;;
+      rvfi_mem_wmask_int_2 <= rvfi_mem_wmask_int_1;
+    end
+  end
+  
+  // Source registers 1 and 2 are read in the first instruction cycle
+  // Source register 3 is read in the second instruction cycle.
+  always_comb begin
+    if (instr_first_cycle_id) begin   // Need to check
+      rvfi_rs1_data_d = rf_ren_a ? rf_rdata_a_ex : '0;
+      rvfi_rs1_addr_d = rf_ren_a ? rf_raddr_a : '0;
+      rvfi_rs2_data_d = rf_ren_b ? rf_rdata_b_ex : '0;
+      rvfi_rs2_addr_d = rf_ren_b ? rf_raddr_b : '0;
+      rvfi_rs3_data_d = '0;
+      rvfi_rs3_addr_d = '0;
+    end else begin
+      rvfi_rs1_data_d = rvfi_rs1_data_q;
+      rvfi_rs1_addr_d = rvfi_rs1_addr_q;
+      rvfi_rs2_data_d = rvfi_rs2_data_q;
+      rvfi_rs2_addr_d = rvfi_rs2_addr_q;
+      rvfi_rs3_data_d = rf_rdata_a_ex;
+      rvfi_rs3_addr_d = rf_raddr_a;
+    end
+  end
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      rvfi_rs1_data_q <= '0;
+      rvfi_rs1_addr_q <= '0;
+      rvfi_rs2_data_q <= '0;
+      rvfi_rs2_addr_q <= '0;
+    end else begin
+      rvfi_rs1_data_q <= rvfi_rs1_data_d;
+      rvfi_rs1_addr_q <= rvfi_rs1_addr_d;
+      rvfi_rs2_data_q <= rvfi_rs2_data_d;
+      rvfi_rs2_addr_q <= rvfi_rs2_addr_d;
+    end
+  end
+  always_comb begin
+    if (rvfi_rd_we_wb) begin
+      // Capture address/data of write to register file
+      rvfi_rd_addr_d = rvfi_rd_addr_wb;
+      // If writing to x0 zero write data as required by RVFI specification
+      if (rvfi_rd_addr_wb == 5'b0) begin
+        rvfi_rd_wdata_d = '0;
+      end else begin
+        rvfi_rd_wdata_d = rvfi_rd_wdata_wb;
+      end
+    end else if (rvfi_instr_new_wb) begin
+      // If no RF write but new instruction in Writeback (when present) or ID/EX (when no writeback
+      // stage present) then zero RF write address/data as required by RVFI specification
+      rvfi_rd_addr_d  = '0;
+      rvfi_rd_wdata_d = '0;
+    end else begin
+      // Otherwise maintain previous value
+      rvfi_rd_addr_d  = rvfi_rd_addr_q;
+      rvfi_rd_wdata_d = rvfi_rd_wdata_q;
+    end
+  end
+  // RD write register is refreshed only once per cycle and
+  // then it is kept stable for the cycle.
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      rvfi_rd_addr_q    <= '0;
+      rvfi_rd_wdata_q   <= '0;
+    end else begin
+      rvfi_rd_addr_q    <= rvfi_rd_addr_d;
+      rvfi_rd_wdata_q   <= rvfi_rd_wdata_d;
+    end
+  end
+  logic rvfi_stage_rf_wr_suppress_wb;
+  logic rvfi_rf_wr_suppress_wb;
+  // Set when RF write from load data is suppressed due to an integrity error
+  assign rvfi_rf_wr_suppress_wb =
+    instr_done_wb & ~rf_we_wb & outstanding_load_wb & lsu_load_resp_intg_err;
+  always@(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      rvfi_stage_rf_wr_suppress_wb <= 1'b0;
+    end else if (rvfi_wb_done) begin
+      rvfi_stage_rf_wr_suppress_wb <= rvfi_rf_wr_suppress_wb;
+    end
+  end
+  assign rvfi_ext_rf_wr_suppress = rvfi_stage_rf_wr_suppress_wb;
+  assign rvfi_intr_d = instr_first_cycle_id ? rvfi_set_trap_pc_q : rvfi_intr_q;
+  always_comb begin
+    rvfi_set_trap_pc_d = rvfi_set_trap_pc_q;
+    if (pc_set && pc_mux_id == PC_EXC &&
+        (exc_pc_mux_id == EXC_PC_EXC || exc_pc_mux_id == EXC_PC_IRQ)) begin
+      // PC is set to enter a trap handler
+      rvfi_set_trap_pc_d = 1'b1;
+    end else if (rvfi_set_trap_pc_q && rvfi_id_done) begin
+      // first instruction has been executed after PC is set to trap handler
+      rvfi_set_trap_pc_d = 1'b0;
+    end
+  end
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      rvfi_set_trap_pc_q <= 1'b0;
+      rvfi_intr_q        <= 1'b0;
+    end else begin
+      rvfi_set_trap_pc_q <= rvfi_set_trap_pc_d;
+      rvfi_intr_q        <= rvfi_intr_d;
+    end
+  end
+/*
+  for (genvar i = 0; i < RVFI_STAGES; i = i + 1) begin : g_rvfi_stages
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if(!rst_ni) begin
+        rvfi_stage_halt[i]                 <= '0;
+        rvfi_stage_trap[i]                 <= '0;
+        rvfi_stage_intr[i]                 <= '0;
+        rvfi_stage_order[i]                <= '0;
+        rvfi_stage_insn[i]                 <= '0;
+        rvfi_stage_mode[i]                 <= {PRIV_LVL_M};
+        rvfi_stage_ixl[i]                  <= CSR_MISA_MXL;
+        rvfi_stage_rs1_addr[i]             <= '0;
+        rvfi_stage_rs2_addr[i]             <= '0;
+        rvfi_stage_rs3_addr[i]             <= '0;
+        rvfi_stage_pc_rdata[i]             <= '0;
+        rvfi_stage_pc_wdata[i]             <= '0;
+        rvfi_stage_mem_rmask[i]            <= '0;
+        rvfi_stage_mem_wmask[i]            <= '0;
+        rvfi_stage_valid[i]                <= '0;
+        rvfi_stage_rs1_rdata[i]            <= '0;
+        rvfi_stage_rs2_rdata[i]            <= '0;
+        rvfi_stage_rs3_rdata[i]            <= '0;
+        rvfi_stage_rd_wdata[i]             <= '0;
+        rvfi_stage_rd_addr[i]              <= '0;
+        rvfi_stage_mem_rdata[i]            <= '0;
+        rvfi_stage_mem_wdata[i]            <= '0;
+        rvfi_stage_mem_addr[i]             <= '0;
+        rvfi_ext_stage_pre_mip[i+1]        <= '0;
+        rvfi_ext_stage_post_mip[i]         <= '0;
+        rvfi_ext_stage_nmi[i+1]            <= '0;
+        rvfi_ext_stage_nmi_int[i+1]        <= '0;
+        rvfi_ext_stage_debug_req[i+1]      <= '0;
+        rvfi_ext_stage_debug_mode[i]       <= '0;
+        rvfi_ext_stage_mcycle[i]           <= '0;
+        rvfi_ext_stage_mhpmcounters[i]     <= '{10{'0}};
+        rvfi_ext_stage_mhpmcountersh[i]    <= '{10{'0}};
+        rvfi_ext_stage_ic_scr_key_valid[i] <= '0;
+      end else begin
+        rvfi_stage_valid[i] <= rvfi_stage_valid_d[i];
+        if (i == 0) begin
+          if (rvfi_id_done) begin
+            rvfi_stage_halt[i]                 <= '0;
+            rvfi_stage_trap[i]                 <= rvfi_trap_id;
+            rvfi_stage_intr[i]                 <= rvfi_intr_d;
+            rvfi_stage_order[i]                <= rvfi_stage_order_d;
+            rvfi_stage_insn[i]                 <= rvfi_insn_id;
+            rvfi_stage_mode[i]                 <= {priv_mode_id};
+            rvfi_stage_ixl[i]                  <= CSR_MISA_MXL;
+            rvfi_stage_rs1_addr[i]             <= rvfi_rs1_addr_d;
+            rvfi_stage_rs2_addr[i]             <= rvfi_rs2_addr_d;
+            rvfi_stage_rs3_addr[i]             <= rvfi_rs3_addr_d;
+            rvfi_stage_pc_rdata[i]             <= pc_id;
+            rvfi_stage_pc_wdata[i]             <= pc_set ? branch_target_ex : pc_if;
+            rvfi_stage_mem_rmask[i]            <= rvfi_mem_mask_int;
+            rvfi_stage_mem_wmask[i]            <= data_we_o ? rvfi_mem_mask_int : 4'b0000;
+            rvfi_stage_rs1_rdata[i]            <= rvfi_rs1_data_d;
+            rvfi_stage_rs2_rdata[i]            <= rvfi_rs2_data_d;
+            rvfi_stage_rs3_rdata[i]            <= rvfi_rs3_data_d;
+            rvfi_stage_rd_addr[i]              <= rvfi_rd_addr_d;
+            rvfi_stage_rd_wdata[i]             <= rvfi_rd_wdata_d;
+            rvfi_stage_mem_rdata[i]            <= rvfi_mem_rdata_d;
+            rvfi_stage_mem_wdata[i]            <= rvfi_mem_wdata_d;
+            rvfi_stage_mem_addr[i]             <= rvfi_mem_addr_d;
+            rvfi_ext_stage_debug_mode[i]       <= debug_mode;
+            rvfi_ext_stage_mcycle[i]           <= cs_registers_i.mcycle_counter_i.counter_val_o;
+            rvfi_ext_stage_ic_scr_key_valid[i] <= cs_registers_i.cpuctrlsts_ic_scr_key_valid_q;
+            // This is done this way because SystemVerilog does not support looping through
+            // gen_cntrs[k] within a for loop.
+            for (int k=0; k < 10; k++) begin
+              rvfi_ext_stage_mhpmcounters[i][k]  <= cs_registers_i.mhpmcounter[k+3][31:0];
+              rvfi_ext_stage_mhpmcountersh[i][k] <= cs_registers_i.mhpmcounter[k+3][63:32];
+            end
+          end
+          // Some of the rvfi_ext_* signals are used to provide an interrupt notification (signalled
+          // via rvfi_ext_irq_valid) when there isn't a valid retired instruction as well as
+          // providing information along with a retired instruction. Move these up the rvfi pipeline
+          // for both cases.
+          if (rvfi_id_done | rvfi_ext_stage_irq_valid[i]) begin
+            rvfi_ext_stage_pre_mip[i+1]   <= rvfi_ext_stage_pre_mip[i];
+            rvfi_ext_stage_post_mip[i]    <= cs_registers_i.mip;
+            rvfi_ext_stage_nmi[i+1]       <= rvfi_ext_stage_nmi[i];
+            rvfi_ext_stage_nmi_int[i+1]   <= rvfi_ext_stage_nmi_int[i];
+            rvfi_ext_stage_debug_req[i+1] <= rvfi_ext_stage_debug_req[i];
+          end
+        end else begin
+          if (rvfi_wb_done) begin
+            rvfi_stage_halt[i]      <= rvfi_stage_halt[i-1];
+            rvfi_stage_trap[i]      <= rvfi_stage_trap[i-1] | rvfi_trap_wb;
+            rvfi_stage_intr[i]      <= rvfi_stage_intr[i-1];
+            rvfi_stage_order[i]     <= rvfi_stage_order[i-1];
+            rvfi_stage_insn[i]      <= rvfi_stage_insn[i-1];
+            rvfi_stage_mode[i]      <= rvfi_stage_mode[i-1];
+            rvfi_stage_ixl[i]       <= rvfi_stage_ixl[i-1];
+            rvfi_stage_rs1_addr[i]  <= rvfi_stage_rs1_addr[i-1];
+            rvfi_stage_rs2_addr[i]  <= rvfi_stage_rs2_addr[i-1];
+            rvfi_stage_rs3_addr[i]  <= rvfi_stage_rs3_addr[i-1];
+            rvfi_stage_pc_rdata[i]  <= rvfi_stage_pc_rdata[i-1];
+            rvfi_stage_pc_wdata[i]  <= rvfi_stage_pc_wdata[i-1];
+            rvfi_stage_mem_rmask[i] <= rvfi_stage_mem_rmask[i-1];
+            rvfi_stage_mem_wmask[i] <= rvfi_stage_mem_wmask[i-1];
+            rvfi_stage_rs1_rdata[i] <= rvfi_stage_rs1_rdata[i-1];
+            rvfi_stage_rs2_rdata[i] <= rvfi_stage_rs2_rdata[i-1];
+            rvfi_stage_rs3_rdata[i] <= rvfi_stage_rs3_rdata[i-1];
+            rvfi_stage_mem_wdata[i] <= rvfi_stage_mem_wdata[i-1];
+            rvfi_stage_mem_addr[i]  <= rvfi_stage_mem_addr[i-1];
+            // For 2 RVFI_STAGES/Writeback Stage ignore first stage flops for rd_addr, rd_wdata and
+            // mem_rdata. For RF write addr/data actual write happens in writeback so capture
+            // address/data there. For mem_rdata that is only available from the writeback stage.
+            // Previous stage flops still exist in RTL as they are used by the non writeback config
+            rvfi_stage_rd_addr[i]   <= rvfi_rd_addr_d;
+            rvfi_stage_rd_wdata[i]  <= rvfi_rd_wdata_d;
+            rvfi_stage_mem_rdata[i] <= rvfi_mem_rdata_d;
+            rvfi_ext_stage_debug_mode[i]       <= rvfi_ext_stage_debug_mode[i-1];
+            rvfi_ext_stage_mcycle[i]           <= rvfi_ext_stage_mcycle[i-1];
+            rvfi_ext_stage_ic_scr_key_valid[i] <= rvfi_ext_stage_ic_scr_key_valid[i-1];
+            rvfi_ext_stage_mhpmcounters[i]     <= rvfi_ext_stage_mhpmcounters[i-1];
+            rvfi_ext_stage_mhpmcountersh[i]    <= rvfi_ext_stage_mhpmcountersh[i-1];
+          end
+          // Some of the rvfi_ext_* signals are used to provide an interrupt notification (signalled
+          // via rvfi_ext_irq_valid) when there isn't a valid retired instruction as well as
+          // providing information along with a retired instruction. Move these up the rvfi pipeline
+          // for both cases.
+          if (rvfi_wb_done | rvfi_ext_stage_irq_valid[i]) begin
+            rvfi_ext_stage_pre_mip[i+1]   <= rvfi_ext_stage_pre_mip[i];
+            rvfi_ext_stage_post_mip[i]    <= rvfi_ext_stage_post_mip[i-1];
+            rvfi_ext_stage_nmi[i+1]       <= rvfi_ext_stage_nmi[i];
+            rvfi_ext_stage_nmi_int[i+1]   <= rvfi_ext_stage_nmi_int[i];
+            rvfi_ext_stage_debug_req[i+1] <= rvfi_ext_stage_debug_req[i];
+          end
+        end
+      end
+    end
+  end
+*/
+  assign rvfi_valid     = instr_done_wb_1; //rvfi_stage_valid    [RVFI_STAGES-1];
+  assign rvfi_order     = 64'hFFFFFFFF; //rvfi_stage_order    [RVFI_STAGES-1];
+  assign rvfi_insn      = rvfi_insn_id_2; //rvfi_stage_intr    [RVFI_STAGES-1];
+  assign rvfi_trap      = 1'b0;         //rvfi_stage_trap     [RVFI_STAGES-1];
+  assign rvfi_halt      = 1'b0;         //rvfi_stage_halt     [RVFI_STAGES-1];
+  assign rvfi_intr      = 1'b0;         //rvfi_stage_intr     [RVFI_STAGES-1];
+  assign rvfi_mode      = 2'b11;        //rvfi_stage_mode     [RVFI_STAGES-1];
+  assign rvfi_ixl       = 2'd1;         //rvfi_stage_ixl      [RVFI_STAGES-1];
+  assign rvfi_rs1_addr  = rvfi_rs1_addr_d; //rvfi_stage_rs1_addr [RVFI_STAGES-1];
+  assign rvfi_rs2_addr  = rvfi_rs2_addr_d; //rvfi_stage_rs2_addr [RVFI_STAGES-1];
+  assign rvfi_rs3_addr  = rvfi_rs3_addr_d; //rvfi_stage_rs3_addr [RVFI_STAGES-1];
+  assign rvfi_rs1_rdata = rvfi_rs1_data_d; //rvfi_stage_rs1_rdata[RVFI_STAGES-1];
+  assign rvfi_rs2_rdata = rvfi_rs2_data_d; //rvfi_stage_rs2_rdata[RVFI_STAGES-1];
+  assign rvfi_rs3_rdata = rvfi_rs3_data_d; //rvfi_stage_rs3_rdata[RVFI_STAGES-1];
+  assign rvfi_rd_addr   = rvfi_rd_addr_d; //rvfi_stage_rd_addr  [RVFI_STAGES-1];
+  assign rvfi_rd_wdata  = rvfi_rd_wdata_d; //rvfi_stage_rd_wdata [RVFI_STAGES-1];
+  assign rvfi_pc_rdata  = pc_id_2; //rvfi_stage_pc_rdata [RVFI_STAGES-1];
+  assign rvfi_pc_wdata  = pc_wdata_3; //rvfi_stage_pc_wdata [RVFI_STAGES-1];
+  assign rvfi_mem_addr  = rvfi_mem_addr_d; //rvfi_stage_mem_addr [RVFI_STAGES-1];
+  assign rvfi_mem_rmask = rvfi_mem_rmask_int_2; //rvfi_stage_mem_rmask[RVFI_STAGES-1];
+  assign rvfi_mem_wmask = rvfi_mem_wmask_int_2; //rvfi_stage_mem_wmask[RVFI_STAGES-1];
+  assign rvfi_mem_rdata = rvfi_mem_rdata_d; //rvfi_stage_mem_rdata[RVFI_STAGES-1];
+  assign rvfi_mem_wdata = rvfi_mem_wdata_d; //rvfi_stage_mem_wdata[RVFI_STAGES-1];
+`endif
 
   // Comment lai vi khong dung Performance Counters
 

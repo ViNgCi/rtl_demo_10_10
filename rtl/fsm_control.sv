@@ -151,12 +151,19 @@ module ibex_fsm_control# (
   logic        instr_done;
   logic        multicycle_done;
 
-  logic        multdiv_en_dec = multdiv_en_dec_i;
-  logic        alu_multicycle_dec=alu_multicycle_dec_i;
-  logic        jump_set_dec = jump_set_dec_i;
-  logic        branch_in_dec = branch_in_dec_i;
-  logic        lsu_req_dec = lsu_req_dec_i;
-  logic        lsu_req_done = lsu_req_done_i;
+  logic        multdiv_en_dec;
+  logic        alu_multicycle_dec;
+  logic        jump_set_dec;
+  logic        branch_in_dec;
+  logic        lsu_req_dec;
+  logic        lsu_req_done;
+
+  assign        multdiv_en_dec = multdiv_en_dec_i;
+  assign        alu_multicycle_dec=alu_multicycle_dec_i;
+  assign        jump_set_dec = jump_set_dec_i;
+  assign        branch_in_dec = branch_in_dec_i;
+  assign        lsu_req_dec = lsu_req_dec_i;
+  assign        lsu_req_done = lsu_req_done_i;
 
   logic        wb_exception;
   logic        id_exception;
@@ -165,25 +172,38 @@ module ibex_fsm_control# (
   logic        branch_jump_set_done_q, branch_jump_set_done_d;
   logic        branch_not_set;
   logic        branch_taken;
-  logic        jump_in_dec = jump_in_dec_i;
+  logic        jump_in_dec;
+  assign        jump_in_dec = jump_in_dec_i;
   logic        jump_set, jump_set_raw;
 
   logic        illegal_dret_insn;
   logic        illegal_umode_insn;
 
-  logic        dret_insn_dec = dret_insn_dec_i;
-  logic        mret_insn_dec = mret_insn_dec_i;
+  logic        dret_insn_dec;
+  logic        mret_insn_dec;
 
-  logic        wfi_insn_dec = wfi_insn_dec_i;
-  logic        illegal_insn_dec = illegal_insn_dec_i;
+  assign        dret_insn_dec = dret_insn_dec_i;
+  assign        mret_insn_dec = mret_insn_dec_i;
+
+  logic        wfi_insn_dec;
+  logic        illegal_insn_dec;
+
+  assign        wfi_insn_dec = wfi_insn_dec_i;
+  assign        illegal_insn_dec = illegal_insn_dec_i;
 
   logic        mem_resp_intg_err;
 
-  logic        ecall_insn_dec = ecall_insn_dec_i;
+  logic        ecall_insn_dec;
 
-  logic        ebrk_insn = ebrk_insn_i;
+  logic        ebrk_insn;
 
-  logic        csr_pipe_flush = csr_pipe_flush_i;
+  logic        csr_pipe_flush;
+
+  assign        ecall_insn_dec = ecall_insn_dec_i;
+
+  assign        ebrk_insn = ebrk_insn_i;
+
+  assign        csr_pipe_flush = csr_pipe_flush_i;
 
   logic        controller_run;
   

@@ -995,7 +995,7 @@ module ibex_core import ibex_pkg::*; #(
   end
 
   //`ASSERT(NoMemResponseWithoutPendingAccess,
-    data_rvalid_i |-> outstanding_load_resp | outstanding_store_resp, clk_i, !rst_ni)
+    // data_rvalid_i |-> outstanding_load_resp | outstanding_store_resp, clk_i, !rst_ni)
 
 
   // Keep track of the PC last seen in the ID stage when fetch is disabled
@@ -1019,7 +1019,7 @@ module ibex_core import ibex_pkg::*; #(
   // ID/EX stage is not valid or the PC of the ID/EX stage must remain as it was at disable. The
   // ID/EX valid should not ressert once it has been cleared.
   //`ASSERT(NoExecWhenFetchEnableNotOn, fetch_enable_i != IbexMuBiOn |=>
-    (~instr_valid_id || (pc_id == pc_at_fetch_disable)) && ~$rose(instr_valid_id))
+    // (~instr_valid_id || (pc_id == pc_at_fetch_disable)) && ~$rose(instr_valid_id))
 
   `endif
 
