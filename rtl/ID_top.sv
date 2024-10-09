@@ -125,8 +125,6 @@ module ID_top import ibex_pkg::*; #(
 
   output logic [4:0] rf_waddr_wb_o,
 
-  output logic [4:0] rf_raddr_a_o,
-  output logic [4:0] rf_raddr_b_o,
 
   
   // CONTROLLER INTERFACE
@@ -579,5 +577,14 @@ module ID_top import ibex_pkg::*; #(
   // CONTROLLER INTERFACE
   assign illegal_insn_o = illegal_insn_dec; 
   assign jump_set_o = jump_set_dec;    
+
+  assign mult_en_dec = mult_en;
+  assign div_en_dec = div_en;
+  assign lsu_we_dec = lsu_we;
+  assign rf_we_dec = rf_we;
+
+  assign rf_ren_a_o = rf_ren_a_dec;
+  assign rf_ren_b_o = rf_ren_b_dec;
+
 
 endmodule

@@ -53,7 +53,7 @@ module WB_top(
         end
     end
     
-    // 0 == RF write from EX
+    // 0 == RF write from EXf
     // 1 == RF write from LSU
     logic [31:0] rf_wdata_wb_mux[2];
     logic [1:0]  rf_wdata_wb_mux_we;
