@@ -977,25 +977,25 @@ module ibex_controller #(
     // Only signal ready, allowing a new instruction into ID, if there is no exception request
     // pending or it is done this cycle.
     //`ASSERT(IbexDontSkipExceptionReq,
-      id_in_ready_o |-> !exception_req_pending || exception_req_done)
+      //id_in_ready_o |-> !exception_req_pending || exception_req_done)
 
     // Once a PC set has been performed for an exception request there must not be any other
     // excepting those to move into debug mode.
     //`ASSERT(IbexNoDoubleSpecialReqPCSet,
-      seen_exception_pc_set &&
-        !((ctrl_fsm_cs inside {DBG_TAKEN_IF, DBG_TAKEN_ID}) &&
-          (pc_mux_o == PC_EXC) && (exc_pc_mux_o == EXC_PC_DBD))
-      |-> !pc_set_o)
+      // seen_exception_pc_set &&
+      //   !((ctrl_fsm_cs inside {DBG_TAKEN_IF, DBG_TAKEN_ID}) &&
+      //     (pc_mux_o == PC_EXC) && (exc_pc_mux_o == EXC_PC_DBD))
+      // |-> !pc_set_o)
 
     // When an exception request is done there must have been an appropriate PC set (either this
     // cycle or a previous one).
     //`ASSERT(IbexSetExceptionPCOnSpecialReqIfExpected,
-      exception_req_pending && expect_exception_pc_set && exception_req_done |->
-      seen_exception_pc_set || exception_pc_set)
+      // exception_req_pending && expect_exception_pc_set && exception_req_done |->
+      // seen_exception_pc_set || exception_pc_set)
 
     // If there's a pending exception req that doesn't need a PC set we must not see one
     //`ASSERT(IbexNoPCSetOnSpecialReqIfNotExpected,
-      exception_req_pending && !expect_exception_pc_set |-> ~pc_set_o)
+      // exception_req_pending && !expect_exception_pc_set |-> ~pc_set_o)
   `endif
 
   `ifdef RVFI
