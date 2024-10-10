@@ -325,28 +325,28 @@ module LSU_top #(
   // Read data integrity check //
   ///////////////////////////////
 
-  // // SEC_CM: BUS.INTEGRITY
-  // if (MemECC) begin : g_mem_rdata_ecc
-  //   logic [1:0] ecc_err;
-  //   logic [MemDataWidth-1:0] data_rdata_buf;
+  // SEC_CM: BUS.INTEGRITY
+  if (MemECC) begin : g_mem_rdata_ecc
+    logic [1:0] ecc_err;
+    logic [MemDataWidth-1:0] data_rdata_buf;
 
-  //   prim_buf #(.Width(MemDataWidth)) u_prim_buf_instr_rdata (
-  //     .in_i (data_rdata_i),
-  //     .out_o(data_rdata_buf)
-  //   );
+    prim_buf #(.Width(MemDataWidth)) u_prim_buf_instr_rdata (
+      .in_i (data_rdata_i),
+      .out_o(data_rdata_buf)
+    );
 
-  //   prim_secded_inv_39_32_dec u_data_intg_dec (
-  //     .data_i     (data_rdata_buf),
-  //     .data_o     (),
-  //     .syndrome_o (),
-  //     .err_o      (ecc_err)
-  //   );
+    prim_secded_inv_39_32_dec u_data_intg_dec (
+      .data_i     (data_rdata_buf),
+      .data_o     (),
+      .syndrome_o (),
+      .err_o      (ecc_err)
+    );
 
-  //   // Don't care if error is correctable or not, they're all treated the same
-  //   assign data_intg_err = |ecc_err;
-  // end else begin : g_no_mem_data_ecc
+    // Don't care if error is correctable or not, they're all treated the same
+    assign data_intg_err = |ecc_err;
+  end else begin : g_no_mem_data_ecc
     assign data_intg_err = 1'b0;
-  // end
+  end
 
   /////////////
   // LSU FSM //
@@ -520,14 +520,14 @@ module LSU_top #(
   /////////////////////////////////////
 
   // SEC_CM: BUS.INTEGRITY
-  // if (MemECC) begin : g_mem_wdata_ecc
-  //   prim_secded_inv_39_32_enc u_data_gen (
-  //     .data_i (data_wdata),
-  //     .data_o (data_wdata_o)
-  //   );
-  // end else begin : g_no_mem_wdata_ecc
+  if (MemECC) begin : g_mem_wdata_ecc
+    prim_secded_inv_39_32_enc u_data_gen (
+      .data_i (data_wdata),
+      .data_o (data_wdata_o)
+    );
+  end else begin : g_no_mem_wdata_ecc
     assign data_wdata_o = data_wdata;
-  // end
+  end
 
   // output to ID stage: mtval + AGU for misaligned transactions
   assign addr_last_o   = addr_last_q;

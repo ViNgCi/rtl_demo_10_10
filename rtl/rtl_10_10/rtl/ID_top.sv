@@ -120,6 +120,8 @@ module ID_top import ibex_pkg::*; #(
   output logic lsu_we_dec,
   output logic lsu_req_dec,
   output logic rf_we_dec,
+  output logic branch_in_dec_o,
+  output logic jump_in_dec_o,
 
   //output logic rf_ren_a_o,
   //output logic rf_ren_b_o,
@@ -137,7 +139,10 @@ module ID_top import ibex_pkg::*; #(
   output logic                 ecall_insn_o,  
   output logic                 wfi_insn_o,    
   output logic                 jump_set_o,    
-  output logic                 icache_inval_o 
+  output logic                 icache_inval_o,
+
+  output  ibex_pkg::wb_instr_type_e instr_type_wb_o,                // =========> DAY VINH OI 
+  output  logic                     instr_perf_count_id_o           // =========> DAY VINH OI 
 
     );
    // ID/EX Pipeline Register 
@@ -185,7 +190,9 @@ module ID_top import ibex_pkg::*; #(
      logic          rf_ren_a_r;
      logic          rf_ren_b_r;           
      logic [31:0]   rf_rdata_a_ID_r; 
-     logic [31:0]   rf_rdata_b_ID_r; 
+     logic [31:0]   rf_rdata_b_ID_r;
+
+     
      
      // CSR
      logic          csr_access_ID_r;
@@ -229,6 +236,12 @@ module ID_top import ibex_pkg::*; #(
      logic mult_sel_dec;
      logic div_sel_dec;
      logic use_rs3_q;
+
+          // WB
+     wb_instr_type_e           instr_type_wb;                               // =========> DAY VINH OI
+     logic                     instr_perf_count_id;                         // =========> DAY VINH OI
+     wb_instr_type_e           instr_type_wb_r;                             // =========> DAY VINH OI
+     logic                     instr_perf_count_id_r;                       // =========> DAY VINH OI
      
     /////////////
     // IMM_GEN //
@@ -305,6 +318,8 @@ module ID_top import ibex_pkg::*; #(
     logic data_sign_extension_dec;
     logic jump_in_dec;
     logic branch_in_dec;
+    assign branch_in_dec_o = branch_in_dec;
+    assign jump_in_dec_o = jump_in_dec;  
     logic illegal_insn_dec;
     logic rf_we;
     logic rf_ren_a_dec;
@@ -450,6 +465,10 @@ module ID_top import ibex_pkg::*; #(
          lsu_type_ID_r <= 2'b0;
          lsu_sign_ext_ID_r <= 1'b0;
          lsu_wdata_ID_r <= 32'b0; 
+
+         instr_perf_count_id_r <= 1'b0;                         // =========> DAY VINH OI
+         instr_type_wb_r <= wb_instr_type_e'(0);                // =========> DAY VINH OI
+
         end else 
         begin
         // IMM
@@ -510,6 +529,10 @@ module ID_top import ibex_pkg::*; #(
          lsu_type_ID_r <= lsu_type;
          lsu_sign_ext_ID_r <= lsu_sign_ext;
          lsu_wdata_ID_r <= lsu_wdata; 
+
+         // WB
+          instr_perf_count_id_r <= instr_perf_count_id;                 // =========> DAY VINH OI
+          instr_type_wb_r <= instr_type_wb;                             // =========> DAY VINH OI
         
         end
     end
@@ -578,6 +601,19 @@ module ID_top import ibex_pkg::*; #(
   // CONTROLLER INTERFACE
   assign illegal_insn_o = illegal_insn_dec; 
   assign jump_set_o = jump_set_dec;    
+
+    //////////// =========> DAY VINH OI
+    
+    assign instr_type_wb = ~lsu_req ? WB_INSTR_OTHER :
+                              lsu_we      ? WB_INSTR_STORE :
+                                            WB_INSTR_LOAD;
+    assign instr_perf_count_id = ~ebrk_insn_o & ~ecall_insn_o & ~illegal_insn_o &
+       ~instr_fetch_err_i ;
+        //   &~illegal_csr_insn_i; // MAY BE FIXED
+        
+    assign   instr_type_wb_o = instr_type_wb_r;
+    assign   instr_perf_count_id_o = instr_perf_count_id_r;
+    ////////////////////////////////////////////////////////////////////
 
   assign mult_en_dec = mult_en;
   assign div_en_dec = div_en;

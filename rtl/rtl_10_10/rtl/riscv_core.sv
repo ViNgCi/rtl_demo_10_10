@@ -669,6 +669,8 @@ module riscv_core import ibex_pkg::*; #(
     .lsu_we_dec         (lsu_we_dec),              // NOT DONE (n\u1ed1i vào input ex_stage)
     .lsu_req_dec        (lsu_req_dec),             // NOT DONE (n\u1ed1i vào input ex_stage)
     .rf_we_dec          (rf_we_dec),            // NOT DONE (n\u1ed1i vào input ex_stage)
+    .branch_in_dec_o    (branch_in_dec),
+    .jump_in_dec_o    (jump_in_dec),
 
     //.rf_ren_a_o       (rf_ren_a),            // NOT DONE (n\u1ed1i vào input ex_stage)
     
@@ -686,6 +688,10 @@ module riscv_core import ibex_pkg::*; #(
 
   // for RVFI only
   assign unused_illegal_insn_id = illegal_insn_id;
+
+  logic multdiv_en_dec;
+
+  assign multdiv_en_dec   = mult_en_dec | div_en_dec;
 
   //////////////////////
   //     ID Stage     //
@@ -788,7 +794,7 @@ module riscv_core import ibex_pkg::*; #(
     .jump_set_dec_i(jump_set_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .alu_multicycle_dec_i(alu_multicycle_dec),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
 
-    .ready_wb_i(ready_wb),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
+    .ready_wb_i(1),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage) ready_wb wait 
     .multdiv_ready_id_o(multdiv_ready_id),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .instr_id_done_o(instr_id_done),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
     .instr_type_wb_o(instr_type_wb),  // NOT DONE (t\u1eeb output c\u1ee7a ex_stage)
@@ -1512,6 +1518,8 @@ ibex_cs_registers #(
   // rvfi_pc_rdata
   logic [31:0] pc_id_1;
   logic [31:0] pc_id_2;
+  logic [31:0] pc_if_1;
+  logic [31:0] pc_if_2;
   //rvfi_pc_wdata
   logic [31:0] pc_wdata;
   assign pc_wdata = pc_set ? branch_target_ex : pc_if;
@@ -1535,6 +1543,8 @@ ibex_cs_registers #(
       rvfi_insn_id_3 <= 0;
       pc_id_1 <= 0;
       pc_id_2 <= 0;
+      pc_if_1 <= 0;
+      pc_if_2 <= 0;
       pc_wdata_1 <= 0;
       pc_wdata_2 <= 0;
       pc_wdata_3 <= 0;
@@ -1550,6 +1560,8 @@ ibex_cs_registers #(
       rvfi_insn_id_3 <= rvfi_insn_id_2;
       pc_id_1 <= pc_id;
       pc_id_2 <= pc_id_1;
+      pc_if_1 <= pc_if;
+      pc_if_2 <= pc_if_1;
       pc_wdata_1 <= pc_wdata;
       pc_wdata_2 <= pc_wdata_1;
       pc_wdata_3 <= pc_wdata_2;
@@ -1792,13 +1804,13 @@ ibex_cs_registers #(
     end
   end
 */
-  assign rvfi_valid     = instr_done_wb_1; //rvfi_stage_valid    [RVFI_STAGES-1];
+  assign rvfi_valid     = rvfi_wb_done;// instr_done_wb; //rvfi_stage_valid    [RVFI_STAGES-1];
   assign rvfi_order     = 64'hFFFFFFFF; //rvfi_stage_order    [RVFI_STAGES-1];
-  assign rvfi_insn      = rvfi_insn_id_2; //rvfi_stage_intr    [RVFI_STAGES-1];
+  assign rvfi_insn      = rvfi_insn_id_1; //rvfi_stage_intr    [RVFI_STAGES-1];
   assign rvfi_trap      = 1'b0;         //rvfi_stage_trap     [RVFI_STAGES-1];
   assign rvfi_halt      = 1'b0;         //rvfi_stage_halt     [RVFI_STAGES-1];
   assign rvfi_intr      = 1'b0;         //rvfi_stage_intr     [RVFI_STAGES-1];
-  assign rvfi_mode      = 2'b11;        //rvfi_stage_mode     [RVFI_STAGES-1];
+  assign rvfi_mode      = 2'b01;        //rvfi_stage_mode     [RVFI_STAGES-1];
   assign rvfi_ixl       = 2'd1;         //rvfi_stage_ixl      [RVFI_STAGES-1];
   assign rvfi_rs1_addr  = rvfi_rs1_addr_d; //rvfi_stage_rs1_addr [RVFI_STAGES-1];
   assign rvfi_rs2_addr  = rvfi_rs2_addr_d; //rvfi_stage_rs2_addr [RVFI_STAGES-1];
@@ -1808,8 +1820,8 @@ ibex_cs_registers #(
   assign rvfi_rs3_rdata = rvfi_rs3_data_d; //rvfi_stage_rs3_rdata[RVFI_STAGES-1];
   assign rvfi_rd_addr   = rvfi_rd_addr_d; //rvfi_stage_rd_addr  [RVFI_STAGES-1];
   assign rvfi_rd_wdata  = rvfi_rd_wdata_d; //rvfi_stage_rd_wdata [RVFI_STAGES-1];
-  assign rvfi_pc_rdata  = pc_id_2; //rvfi_stage_pc_rdata [RVFI_STAGES-1];
-  assign rvfi_pc_wdata  = pc_wdata_3; //rvfi_stage_pc_wdata [RVFI_STAGES-1];
+  assign rvfi_pc_rdata  = pc_if; //rvfi_stage_pc_rdata [RVFI_STAGES-1];
+  assign rvfi_pc_wdata  = pc_wdata; //rvfi_stage_pc_wdata [RVFI_STAGES-1];
   assign rvfi_mem_addr  = rvfi_mem_addr_d; //rvfi_stage_mem_addr [RVFI_STAGES-1];
   assign rvfi_mem_rmask = rvfi_mem_rmask_int_2; //rvfi_stage_mem_rmask[RVFI_STAGES-1];
   assign rvfi_mem_wmask = rvfi_mem_wmask_int_2; //rvfi_stage_mem_wmask[RVFI_STAGES-1];

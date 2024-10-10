@@ -416,7 +416,118 @@ module ibex_fsm_control# (
   // ID-EX FSM //
   ///////////////
 
-  typedef enum logic { FIRST_CYCLE, MULTI_CYCLE } id_fsm_e;
+  //typedef enum logic { FIRST_CYCLE, MULTI_CYCLE } id_fsm_e;
+//  id_fsm_e id_fsm_q, id_fsm_d;
+//
+//  always_ff @(posedge clk_i or negedge rst_ni) begin : id_pipeline_reg
+//    if (!rst_ni) begin
+//      id_fsm_q <= FIRST_CYCLE;
+//    end else if (instr_executing) begin
+//      id_fsm_q <= id_fsm_d;
+//    end
+//  end
+
+//  assign rf_we_raw_o = rf_we_raw;
+
+//  // ID/EX stage can be in two states, FIRST_CYCLE and MULTI_CYCLE. An instruction enters
+//  // MULTI_CYCLE if it requires multiple cycles to complete regardless of stalls and other
+//  // considerations. An instruction may be held in FIRST_CYCLE if it's unable to begin executing
+//  // (this is controlled by instr_executing).
+
+//  always_comb begin
+//    id_fsm_d                = id_fsm_q;
+//    rf_we_raw               = rf_we_dec;
+//    stall_multdiv           = 1'b0;
+//    stall_jump              = 1'b0;
+//    stall_branch            = 1'b0;
+//    stall_alu               = 1'b0;
+//    branch_set_raw_d        = 1'b0;
+//    branch_not_set          = 1'b0;
+//    jump_set_raw            = 1'b0;
+//    perf_branch_o           = 1'b0;
+
+//    if (instr_executing_spec) begin
+//      unique case (id_fsm_q)
+//        FIRST_CYCLE: begin
+//          unique case (1'b1)
+//            lsu_req_dec: begin
+//              if (!WritebackStage) begin
+//                // LSU operation
+//                id_fsm_d    = MULTI_CYCLE;
+//              end else begin
+//                if(~lsu_req_done_i) begin
+//                  id_fsm_d  = MULTI_CYCLE;
+//                end
+//              end
+//            end
+//            multdiv_en_dec: begin
+ //             // MUL or DIV operation
+//              if (1) begin
+ //               // When single-cycle multiply is configured mul can finish in the first cycle so
+ //               // only enter MULTI_CYCLE state if a result isn't immediately available
+ //               id_fsm_d      = MULTI_CYCLE;
+ //               rf_we_raw     = 1'b0;
+ //               stall_multdiv = 1'b1;
+ //             end
+ //           end
+ //           branch_in_dec: begin
+ //             // cond branch operation
+ //             // All branches take two cycles in fixed time execution mode, regardless of branch
+  //            // condition.
+  //            // SEC_CM: CORE.DATA_REG_SW.SCA
+ //             id_fsm_d         = (data_ind_timing_i || (!BranchTargetALU && branch_decision_i)) ?
+ //                                    MULTI_CYCLE : FIRST_CYCLE;
+ //             stall_branch     = 1;
+ //             branch_set_raw_d = (branch_decision_i | data_ind_timing_i);
+//
+ //             if (BranchPredictor) begin
+ //               branch_not_set = ~branch_decision_i;
+ //             end
+//
+ //             perf_branch_o = 1'b1;
+ //           end
+ //           jump_in_dec: begin
+ //             // uncond branch operation
+ //             // BTALU means jumps only need one cycle
+ //             //id_fsm_d      = BranchTargetALU ? FIRST_CYCLE : MULTI_CYCLE;
+ //             //stall_jump    = ~BranchTargetALU;
+ //             id_fsm_d      = MULTI_CYCLE;
+ //             stall_jump    = 1;
+ //             jump_set_raw  = jump_set_dec;
+ //           end
+ //           alu_multicycle_dec: begin
+ //             stall_alu     = 1'b1;
+ //             id_fsm_d      = MULTI_CYCLE;
+ //             rf_we_raw     = 1'b0;
+ //           end
+ //           default: begin
+ //             id_fsm_d      = FIRST_CYCLE;
+ //           end
+ //         endcase
+ //       end
+
+ //       MULTI_CYCLE: begin
+ //         if(multdiv_en_dec) begin
+ //           rf_we_raw       = rf_we_dec & ex_valid_i;
+ //         end
+
+ //         if (multicycle_done & ready_wb_i) begin
+ //           id_fsm_d        = FIRST_CYCLE;
+ //         end else begin
+ //           stall_multdiv   = multdiv_en_dec;
+ //           stall_branch    = branch_in_dec;
+ //           stall_jump      = jump_in_dec;
+ //         end
+ //       end
+
+ //       default: begin
+ //         id_fsm_d          = FIRST_CYCLE;
+ //       end
+ //     endcase
+ //   end
+ // end
+
+typedef enum logic [1:0] { FIRST_CYCLE, MULTI_CYCLE, SECOND_CYCLE } id_fsm_e;
   id_fsm_e id_fsm_q, id_fsm_d;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : id_pipeline_reg
@@ -426,8 +537,6 @@ module ibex_fsm_control# (
       id_fsm_q <= id_fsm_d;
     end
   end
-
-  assign rf_we_raw_o = rf_we_raw;
 
   // ID/EX stage can be in two states, FIRST_CYCLE and MULTI_CYCLE. An instruction enters
   // MULTI_CYCLE if it requires multiple cycles to complete regardless of stalls and other
@@ -451,18 +560,13 @@ module ibex_fsm_control# (
         FIRST_CYCLE: begin
           unique case (1'b1)
             lsu_req_dec: begin
-              if (!WritebackStage) begin
-                // LSU operation
-                id_fsm_d    = MULTI_CYCLE;
-              end else begin
                 if(~lsu_req_done_i) begin
                   id_fsm_d  = MULTI_CYCLE;
                 end
-              end
             end
             multdiv_en_dec: begin
               // MUL or DIV operation
-              if (~ex_valid_i) begin
+              if (1) begin
                 // When single-cycle multiply is configured mul can finish in the first cycle so
                 // only enter MULTI_CYCLE state if a result isn't immediately available
                 id_fsm_d      = MULTI_CYCLE;
@@ -475,10 +579,14 @@ module ibex_fsm_control# (
               // All branches take two cycles in fixed time execution mode, regardless of branch
               // condition.
               // SEC_CM: CORE.DATA_REG_SW.SCA
-              id_fsm_d         = (data_ind_timing_i || (!BranchTargetALU && branch_decision_i)) ?
-                                     MULTI_CYCLE : FIRST_CYCLE;
-              stall_branch     = 1;
-              branch_set_raw_d = (branch_decision_i | data_ind_timing_i);
+//              id_fsm_d         = (data_ind_timing_i || (!BranchTargetALU && branch_decision_i)) ?
+//                                     MULTI_CYCLE : FIRST_CYCLE;
+//              stall_branch     = (~BranchTargetALU & branch_decision_i) | data_ind_timing_i;
+//              branch_set_raw_d = (branch_decision_i | data_ind_timing_i);
+              
+              id_fsm_d = SECOND_CYCLE ;
+              stall_branch = 1;
+              branch_set_raw_d = branch_decision_i;
 
               if (BranchPredictor) begin
                 branch_not_set = ~branch_decision_i;
@@ -489,7 +597,11 @@ module ibex_fsm_control# (
             jump_in_dec: begin
               // uncond branch operation
               // BTALU means jumps only need one cycle
-              id_fsm_d      = MULTI_CYCLE;
+//              id_fsm_d      = BranchTargetALU ? FIRST_CYCLE : MULTI_CYCLE;
+//              stall_jump    = ~BranchTargetALU;
+//              jump_set_raw  = jump_set_dec;
+              
+              id_fsm_d      = SECOND_CYCLE  ;
               stall_jump    = 1;
               jump_set_raw  = jump_set_dec;
             end
@@ -508,16 +620,30 @@ module ibex_fsm_control# (
           if(multdiv_en_dec) begin
             rf_we_raw       = rf_we_dec & ex_valid_i;
           end
-
           if (multicycle_done & ready_wb_i) begin
             id_fsm_d        = FIRST_CYCLE;
           end else begin
             stall_multdiv   = multdiv_en_dec;
-            stall_branch    = branch_in_dec;
-            stall_jump      = jump_in_dec;
+           // stall_branch    = branch_in_dec;
+           // stall_jump      = jump_in_dec;
           end
         end
-
+        SECOND_CYCLE: begin
+            unique case (1'b1)
+                branch_in_dec: begin
+                   id_fsm_d = FIRST_CYCLE ;
+                   stall_branch = 0;
+                   branch_set_raw_d = branch_decision_i; 
+                end
+                jump_in_dec: begin
+                   id_fsm_d = FIRST_CYCLE ;
+                   stall_jump = 0;
+                   jump_set_raw = jump_set_dec; 
+                end
+                multdiv_en_dec: begin end
+                alu_multicycle_dec: begin end       
+            endcase
+        end
         default: begin
           id_fsm_d          = FIRST_CYCLE;
         end
